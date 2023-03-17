@@ -1,2 +1,4 @@
 # Project exclude paths
 /dist/
+.env.test
+.env.dev
