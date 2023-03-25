@@ -5,6 +5,7 @@ import { RestaurantsModule } from './restaurnats/restaurants.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import * as Joi from 'joi';
+import { Restaurant } from './restaurnats/entities/restaurant.entity';
 
 @Module({
   imports: [
@@ -35,8 +36,9 @@ import * as Joi from 'joi';
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
-      logging: true,
-      synchronize: true,
+      logging: process.env.NODE_ENV !== 'prod',
+      synchronize: process.env.NODE_ENV !== 'prod',
+      entities: [Restaurant],
     }),
     RestaurantsModule,
   ],
