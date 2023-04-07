@@ -17,5 +17,7 @@ export class UsersResolver {
   }
 
   @Mutation(() => CreateAccountOutput)
-  createAccount(@Args('input') createAccountInput: CreateAccountInput) {}
+  createAccount(@Args('input') createAccountInput: CreateAccountInput) {
+    console.log(createAccountInput);
+  }
 }
