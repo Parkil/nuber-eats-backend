@@ -6,11 +6,12 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
+      whitelist: true, //true 로 설정되면 validator 가 설정되지 않은 속성값을 무시
+      forbidNonWhitelisted: true, //true 로 설정시 validator 가 설정되지 않은 속성 또는 Object 에 설정되지 않은 값이 들어오게 되면 예외표시
       transform: true,
     })
   );
   await app.listen(3000);
 }
+
 bootstrap();

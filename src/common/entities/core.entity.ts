@@ -3,7 +3,9 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { ObjectType } from '@nestjs/graphql';
 
+@ObjectType()
 export class CoreEntity {
   @PrimaryGeneratedColumn()
   id: number;
