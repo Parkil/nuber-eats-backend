@@ -3,6 +3,7 @@ import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { Injectable } from '@nestjs/common';
 import { CreateAccountInput } from './dtos/create-account.dto';
+import { LoginInput } from './dtos/login.dto';
 
 @Injectable()
 export class UsersService {
@@ -30,6 +31,35 @@ export class UsersService {
       return { ok: true };
     } catch (e) {
       return { ok: false, error: 'can not create account' };
+    }
+  }
+
+  async login({
+    email,
+    password,
+  }: LoginInput): Promise<{ ok: boolean; error?: string; token?: string }> {
+    try {
+      const user = await this.users.findOne({
+        where: {
+          email: email,
+        },
+      });
+
+      if (!user) {
+        return { ok: false, error: 'User Not Found' };
+      }
+
+      const passwordCorrect = await user.checkPassword(password);
+      if (!passwordCorrect) {
+        return { ok: false, error: 'Wrong Password' };
+      }
+
+      return {
+        ok: true,
+        token: '1112223333',
+      };
+    } catch (error) {
+      return { ok: false, error };
     }
   }
 }
