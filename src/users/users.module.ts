@@ -3,9 +3,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { UsersResolver } from './users.resolver';
 import { UsersService } from './users.service';
+import { ConfigService } from '@nestjs/config';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User])],
-  providers: [UsersResolver, UsersService],
+  imports: [TypeOrmModule.forFeature([User])], // provider 에 지정된 service를 사용하기 위해서 필요한 모듈?
+  providers: [UsersResolver, UsersService, ConfigService], // 해당 모듈에서 사용할 service?
 })
 export class UsersModule {}
