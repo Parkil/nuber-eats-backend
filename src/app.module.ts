@@ -10,7 +10,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import * as Joi from 'joi';
 import { UsersModule } from './users/users.module';
-import { CommonModule } from './common/common.module';
 import { User } from './users/entities/user.entity';
 import { JwtModule } from './jwt/jwt.module';
 import * as process from 'process';
@@ -38,6 +37,7 @@ import { JwtMiddleware } from './jwt/jwt.middleware';
     GraphQLModule.forRoot({
       driver: ApolloDriver,
       autoSchemaFile: true,
+      context: ({ req }) => ({ user: req['user'] }),
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',
@@ -51,7 +51,6 @@ import { JwtMiddleware } from './jwt/jwt.middleware';
       entities: [User],
     }),
     UsersModule,
-    CommonModule,
     JwtModule.forRoot({
       privateKey: process.env.PRIVATE_KEY,
     }),
@@ -67,8 +66,8 @@ export class AppModule implements NestModule {
     });
 
     consumer.apply(JwtMiddleware).forRoutes({
-      path: '*',
-      method: RequestMethod.ALL,
+      path: '/graphql',
+      method: RequestMethod.POST,
     });
   }
 }
