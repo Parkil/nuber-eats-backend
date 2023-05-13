@@ -1,4 +1,4 @@
-import { BeforeInsert, Column, Entity } from 'typeorm';
+import { BeforeInsert, BeforeUpdate, Column, Entity } from 'typeorm';
 import { CoreEntity } from '../../common/entities/core.entity';
 import {
   Field,
@@ -37,7 +37,9 @@ export class User extends CoreEntity {
   @Column({ type: 'enum', enum: UserRole })
   role: UserRole;
 
+  // BeforeInsert, BeforeUpdate 는 entity 를 이용한 insert, update 에서만 동작한다
   @BeforeInsert()
+  @BeforeUpdate()
   async hashPassword(): Promise<void> {
     try {
       this.password = await bcrypt.hash(this.password, 10);
