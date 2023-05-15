@@ -37,6 +37,10 @@ export class User extends CoreEntity {
   @Column({ type: 'enum', enum: UserRole })
   role: UserRole;
 
+  @Column({ default: false })
+  @Field(() => Boolean)
+  emailVerified: boolean;
+
   // BeforeInsert, BeforeUpdate 는 entity 를 이용한 insert, update 에서만 동작한다
   @BeforeInsert()
   @BeforeUpdate()
