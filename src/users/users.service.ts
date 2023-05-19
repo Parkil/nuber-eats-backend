@@ -61,6 +61,7 @@ export class UsersService {
         where: {
           email: email,
         },
+        select: ['password', 'id'], // password, id 컬럼을 가져오도록 명시적으로 정의
       });
 
       if (!user) {
@@ -112,5 +113,20 @@ export class UsersService {
     }
 
     return this.users.save(user);
+  }
+
+  async verifyEmail(code: string): Promise<boolean> {
+    const verification = await this.verification.findOne({
+      where: { code: code },
+      // loadRelationIds: true, // loadRelationIds 관련 releation 의 id만 가져온다 이런점은 JPA 보다 나은듯
+      relations: ['user'], // releation 전체를 불러온다
+    });
+
+    if (verification) {
+      verification.user.emailVerified = true;
+      await this.users.save(verification.user);
+    }
+
+    return false;
   }
 }

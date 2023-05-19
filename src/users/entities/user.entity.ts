@@ -27,9 +27,14 @@ export class User extends CoreEntity {
   @Column()
   email: string;
 
+  /*
+  { select: false } 를 하게 되면 select 할 때 해당컬럼은 가져오지 않는다
+   1개의 컬럼이라도 select : false를 반환하게 되면 findOne,All 을 할때 명시적으로
+    정의하지 않으면 default 상태에서는 가져오지 않는 컬럼이 생기는 듯
+   */
   @Field(() => String)
   @IsString()
-  @Column()
+  @Column({ select: false })
   password: string;
 
   @Field(() => UserRole)
@@ -45,11 +50,13 @@ export class User extends CoreEntity {
   @BeforeInsert()
   @BeforeUpdate()
   async hashPassword(): Promise<void> {
-    try {
-      this.password = await bcrypt.hash(this.password, 10);
-    } catch (e) {
-      console.log(e);
-      throw new InternalServerErrorException(e);
+    if (this.password) {
+      try {
+        this.password = await bcrypt.hash(this.password, 10);
+      } catch (e) {
+        console.log(e);
+        throw new InternalServerErrorException(e);
+      }
     }
   }
 
