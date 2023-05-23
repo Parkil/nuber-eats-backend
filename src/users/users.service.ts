@@ -2,11 +2,16 @@ import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { Injectable } from '@nestjs/common';
-import { CreateAccountInput } from './dtos/create-account.dto';
-import { LoginInput } from './dtos/login.dto';
+import {
+  CreateAccountInput,
+  CreateAccountOutput,
+} from './dtos/create-account.dto';
+import { LoginInput, LoginOutput } from './dtos/login.dto';
 import { JwtService } from '../jwt/jwt.service';
-import { EditProfileInput } from './dtos/edit-profile.dto';
+import { EditProfileInput, EditProfileOutput } from './dtos/edit-profile.dto';
 import { Verification } from './entities/verification.entity';
+import { UserProfileInput, UserProfileOutput } from './dtos/user-profile.dto';
+import { VerifyEmailOutput } from './dtos/verify-email.dto';
 
 @Injectable()
 export class UsersService {
@@ -22,7 +27,7 @@ export class UsersService {
     email,
     password,
     role,
-  }: CreateAccountInput): Promise<{ error?: string; ok: boolean }> {
+  }: CreateAccountInput): Promise<CreateAccountOutput> {
     try {
       const exists = await this.users.findOne({
         where: {
@@ -52,10 +57,7 @@ export class UsersService {
     }
   }
 
-  async login({
-    email,
-    password,
-  }: LoginInput): Promise<{ ok: boolean; error?: string; token?: string }> {
+  async login({ email, password }: LoginInput): Promise<LoginOutput> {
     try {
       const user = await this.users.findOne({
         where: {
@@ -90,43 +92,89 @@ export class UsersService {
   async editProfile(
     userId: number,
     { email, password }: EditProfileInput
-  ): Promise<User> {
-    const user = await this.users.findOne({
-      where: {
-        id: userId,
-      },
-    });
+  ): Promise<EditProfileOutput> {
+    try {
+      await this.dataSource.transaction(async (entityManager) => {
+        const user = await entityManager.findOne(User, {
+          where: { id: userId },
+        });
 
-    if (email) {
-      user.email = email;
-      user.emailVerified = false;
+        if (email) {
+          user.email = email;
+          user.emailVerified = false;
 
-      await this.verification.save(
-        this.verification.create({
-          user,
-        })
-      );
+          await entityManager.save(
+            Verification,
+            this.verification.create({
+              user,
+            })
+          );
+        }
+
+        if (password) {
+          user.password = password;
+        }
+
+        await entityManager.save(User, user);
+      });
+
+      return {
+        ok: true,
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        error,
+      };
     }
-
-    if (password) {
-      user.password = password;
-    }
-
-    return this.users.save(user);
   }
 
-  async verifyEmail(code: string): Promise<boolean> {
-    const verification = await this.verification.findOne({
-      where: { code: code },
-      // loadRelationIds: true, // loadRelationIds 관련 releation 의 id만 가져온다 이런점은 JPA 보다 나은듯
-      relations: ['user'], // releation 전체를 불러온다
-    });
+  async verifyEmail(code: string): Promise<VerifyEmailOutput> {
+    try {
+      await this.dataSource.transaction(async (entityManager) => {
+        const verification = await entityManager.findOne(Verification, {
+          where: { code: code },
+          // loadRelationIds: true, // loadRelationIds 관련 releation 의 id만 가져온다 이런점은 JPA 보다 나은듯
+          relations: ['user'], // releation 전체를 불러온다
+        });
 
-    if (verification) {
-      verification.user.emailVerified = true;
-      await this.users.save(verification.user);
+        if (verification) {
+          verification.user.emailVerified = true;
+          await entityManager.save(User, verification.user);
+        }
+      });
+
+      return {
+        ok: true,
+      };
+    } catch (e) {
+      return {
+        ok: false,
+        error: e,
+      };
     }
+  }
 
-    return false;
+  async userProfile(
+    userProfileInput: UserProfileInput
+  ): Promise<UserProfileOutput> {
+    const errorObj = {
+      error: 'User Not Found',
+      ok: false,
+    };
+
+    try {
+      const user = await this.findById(userProfileInput.userId);
+      if (!user) {
+        return errorObj;
+      }
+
+      return {
+        ok: true,
+        user,
+      };
+    } catch (e) {
+      return errorObj;
+    }
   }
 }
