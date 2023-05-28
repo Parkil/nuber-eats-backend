@@ -141,6 +141,7 @@ export class UsersService {
         if (verification) {
           verification.user.emailVerified = true;
           await entityManager.save(User, verification.user);
+          await entityManager.delete(Verification, { id: verification.id });
         }
       });
 
