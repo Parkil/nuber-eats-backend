@@ -12,6 +12,7 @@ import { EditProfileInput, EditProfileOutput } from './dtos/edit-profile.dto';
 import { Verification } from './entities/verification.entity';
 import { UserProfileInput, UserProfileOutput } from './dtos/user-profile.dto';
 import { VerifyEmailOutput } from './dtos/verify-email.dto';
+import { EmailService } from '../email/email.service';
 
 @Injectable()
 export class UsersService {
@@ -20,7 +21,8 @@ export class UsersService {
     @InjectRepository(User) private readonly users: Repository<User>,
     @InjectRepository(Verification)
     private readonly verification: Repository<Verification>,
-    private readonly jwtService: JwtService
+    private readonly jwtService: JwtService,
+    private readonly emailService: EmailService
   ) {}
 
   async createAccount({
@@ -40,14 +42,20 @@ export class UsersService {
       }
 
       await this.dataSource.transaction(async (transactionalEntityManager) => {
-        const user = await transactionalEntityManager.save(
+        const user: User = await transactionalEntityManager.save(
           this.users.create({ email, password, role })
         );
 
-        await transactionalEntityManager.save(
-          this.verification.create({
-            user,
-          })
+        const verification: Verification =
+          await transactionalEntityManager.save(
+            this.verification.create({
+              user,
+            })
+          );
+
+        await this.emailService.sendVerificationEmail(
+          user.email,
+          verification.code
         );
       });
 
@@ -103,11 +111,16 @@ export class UsersService {
           user.email = email;
           user.emailVerified = false;
 
-          await entityManager.save(
+          const verification: Verification = await entityManager.save(
             Verification,
             this.verification.create({
               user,
             })
+          );
+
+          await this.emailService.sendVerificationEmail(
+            email,
+            verification.code
           );
         }
 

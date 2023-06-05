@@ -3,3 +3,8 @@ export interface EmailOptions {
   emailDomain: string;
   fromEmail: string;
 }
+
+export interface EmailVar {
+  key: string;
+  value: string;
+}
