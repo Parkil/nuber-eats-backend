@@ -5,14 +5,18 @@ import { User } from './entities/user.entity';
 import { Verification } from './entities/verification.entity';
 import { JwtService } from '../jwt/jwt.service';
 import { EmailService } from '../email/email.service';
-import { DataSource, QueryRunner, Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
+import {
+  dataSourceMockFactory,
+  mockTransactionalEntityManager,
+} from '../common/mock/mock.datasource';
 
 // 나머지 서비스 Mocking 설정
-const mockRepository = {
+const mockRepository = () => ({
   findOne: jest.fn(),
   save: jest.fn(),
   create: jest.fn(),
-};
+});
 
 const mockJwtService = {
   sign: jest.fn(),
@@ -23,24 +27,6 @@ const mockEmailService = {
   sendVerificationEmail: jest.fn(),
 };
 
-// DataSource Mocking 설정 - 이부분도 MockRepository 처럼 간단하게 처리할수 있지 않나?
-const qr = {
-  manager: {},
-} as QueryRunner;
-
-class ConnectionMock {
-  createQueryRunner(): QueryRunner {
-    Object.assign(qr.manager, { save: jest.fn() });
-
-    qr.startTransaction = jest.fn();
-    qr.commitTransaction = jest.fn();
-    qr.rollbackTransaction = jest.fn();
-    qr.release = jest.fn();
-
-    return qr;
-  }
-}
-
 // Record: java 의 map 과 비슷하게 key-value 로 구성된 자료형, Partial: 파라메터로 들어온 객체의 모든값을 optional 로 변경한다
 // Repository 의 모든 함수를 mocking 하기 위한 Type 설정
 type MockRepository<T = any> = Partial<Record<keyof Repository<T>, jest.Mock>>;
@@ -48,6 +34,8 @@ type MockRepository<T = any> = Partial<Record<keyof Repository<T>, jest.Mock>>;
 describe('UserService', () => {
   let service: UsersService;
   let userRepository: MockRepository<User>;
+  let dataSource: DataSource;
+  let emailService: EmailService;
 
   beforeAll(async () => {
     // mock 객체를 DI 하기위한 설정
@@ -56,15 +44,15 @@ describe('UserService', () => {
         UsersService,
         {
           provide: DataSource,
-          useClass: ConnectionMock,
+          useFactory: dataSourceMockFactory,
         },
         {
           provide: getRepositoryToken(User),
-          useValue: mockRepository,
+          useValue: mockRepository(),
         },
         {
           provide: getRepositoryToken(Verification),
-          useValue: mockRepository,
+          useValue: mockRepository(),
         },
         {
           provide: JwtService,
@@ -79,6 +67,8 @@ describe('UserService', () => {
 
     service = module.get<UsersService>(UsersService);
     userRepository = module.get(getRepositoryToken(User));
+    dataSource = module.get<DataSource>(DataSource);
+    emailService = module.get<EmailService>(EmailService);
   });
 
   it('should be defined', () => {
@@ -86,22 +76,40 @@ describe('UserService', () => {
   });
 
   describe('createAccount', () => {
+    const createAccountArgs = {
+      email: 'test@gmail,com',
+      password: '111222',
+      role: 0,
+    };
+
     it('should fail if user exists', async () => {
       userRepository.findOne.mockResolvedValue({
         id: 1,
         email: 'test@gmail.com',
       });
 
-      const result = await service.createAccount({
-        email: 'test@gmail,com',
-        password: '111222',
-        role: 0,
-      });
+      const result = await service.createAccount(createAccountArgs);
 
       expect(result).toMatchObject({
         ok: false,
         error: 'There is a user with that email already',
       });
+    });
+
+    it('should create a new user', async () => {
+      // mockResolvedValue 는 mocking method 호출전에 정의 할것
+      userRepository.findOne.mockResolvedValue(undefined);
+      mockTransactionalEntityManager.save.mockResolvedValue(createAccountArgs);
+
+      await service.createAccount(createAccountArgs);
+      /*
+        DataSource 를 mocking 하면서 datasource안의 transaction이 1개의 method로
+        mocking 되기 때문에 transaction 안의 함수 호출이 mocking되지 않는 문제가 발생
+        이문제는 나중에 처리
+       */
+      expect(dataSource.transaction).toHaveBeenCalledTimes(1);
+      expect(mockTransactionalEntityManager.save).toHaveBeenCalledTimes(2);
+      expect(emailService.sendVerificationEmail).toHaveBeenCalledTimes(1);
     });
   });
 
