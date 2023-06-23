@@ -41,17 +41,16 @@ export class UsersService {
         return { ok: false, error: 'There is a user with that email already' };
       }
 
-      await this.dataSource.transaction(async (transactionalEntityManager) => {
-        const user: User = await transactionalEntityManager.save(
+      await this.dataSource.transaction(async (entityManager) => {
+        const user: User = await entityManager.save(
           this.users.create({ email, password, role })
         );
 
-        const verification: Verification =
-          await transactionalEntityManager.save(
-            this.verification.create({
-              user,
-            })
-          );
+        const verification: Verification = await entityManager.save(
+          this.verification.create({
+            user,
+          })
+        );
 
         await this.emailService.sendVerificationEmail(
           user.email,

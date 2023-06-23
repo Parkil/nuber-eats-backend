@@ -37,7 +37,7 @@ describe('UserService', () => {
   let dataSource: DataSource;
   let emailService: EmailService;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     // mock 객체를 DI 하기위한 설정
     const module = await Test.createTestingModule({
       providers: [
@@ -101,20 +101,67 @@ describe('UserService', () => {
       userRepository.findOne.mockResolvedValue(undefined);
       mockTransactionalEntityManager.save.mockResolvedValue(createAccountArgs);
 
-      await service.createAccount(createAccountArgs);
-      /*
-        DataSource 를 mocking 하면서 datasource안의 transaction이 1개의 method로
-        mocking 되기 때문에 transaction 안의 함수 호출이 mocking되지 않는 문제가 발생
-        이문제는 나중에 처리
-       */
+      const result = await service.createAccount(createAccountArgs);
       expect(dataSource.transaction).toHaveBeenCalledTimes(1);
       expect(mockTransactionalEntityManager.save).toHaveBeenCalledTimes(2);
       expect(emailService.sendVerificationEmail).toHaveBeenCalledTimes(1);
+
+      expect(result).toEqual({ ok: true });
+    });
+
+    it('should fail on exception', async () => {
+      userRepository.findOne.mockRejectedValue(new Error());
+      const result = await service.createAccount(createAccountArgs);
+      expect(result).toEqual({ ok: false, error: 'can not create account' });
     });
   });
 
-  it.todo('createAccount');
-  it.todo('login');
+  describe('login', () => {
+    const loginArgs = {
+      email: 'test@gmail.com',
+      password: '111222',
+    };
+
+    it('should fail if user does not exist', async () => {
+      userRepository.findOne.mockResolvedValue(undefined);
+      const result = await service.login(loginArgs);
+      expect(userRepository.findOne).toHaveBeenCalledTimes(1);
+      expect(userRepository.findOne).toHaveBeenCalledWith(expect.any(Object));
+      expect(result).toEqual({ ok: false, error: 'User Not Found' });
+    });
+
+    it('should fail on exception', async () => {
+      userRepository.findOne.mockRejectedValue(new Error());
+      const result = await service.login(loginArgs);
+      expect(result).toEqual({ ok: false, error: expect.any(Error) });
+    });
+
+    it('should fail if password is wrong', async () => {
+      const mockUser = {
+        id: 1,
+        checkPassword: jest.fn(() => Promise.resolve(false)),
+      };
+
+      userRepository.findOne.mockResolvedValue(mockUser);
+      const result = await service.login(loginArgs);
+      expect(result).toEqual({ ok: false, error: 'Wrong Password' });
+    });
+
+    it('should return token if password is correct', async () => {
+      const mockUser = {
+        id: 1,
+        checkPassword: jest.fn(() => Promise.resolve(true)),
+      };
+
+      userRepository.findOne.mockResolvedValue(mockUser);
+      mockJwtService.sign.mockReturnValue('gen token');
+      const result = await service.login(loginArgs);
+      expect(mockJwtService.sign).toHaveBeenCalledTimes(1);
+      expect(mockJwtService.sign).toHaveBeenCalledWith(mockUser.id);
+      expect(result).toEqual({ ok: true, token: expect.any(String) });
+    });
+  });
+
   it.todo('findById');
   it.todo('editProfile');
   it.todo('verifyEmail');
