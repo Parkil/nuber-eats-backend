@@ -9,33 +9,37 @@ import { DataSource, Repository } from 'typeorm';
 import {
   dataSourceMockFactory,
   mockTransactionalEntityManager,
+  MockType,
 } from '../common/mock/mock.datasource';
 
 // 나머지 서비스 Mocking 설정
 const mockRepository = () => ({
   findOne: jest.fn(),
+  findOneOrFail: jest.fn(),
   save: jest.fn(),
   create: jest.fn(),
 });
 
-const mockJwtService = {
-  sign: jest.fn(),
+const mockJwtService = () => ({
+  sign: jest.fn(() => 'signed-token-baby'),
   verify: jest.fn(),
-};
+});
 
-const mockEmailService = {
+const mockEmailService = () => ({
   sendVerificationEmail: jest.fn(),
-};
+});
 
 // Record: java 의 map 과 비슷하게 key-value 로 구성된 자료형, Partial: 파라메터로 들어온 객체의 모든값을 optional 로 변경한다
 // Repository 의 모든 함수를 mocking 하기 위한 Type 설정
+// module.get 으로 가져올때에는 mocking 이 아닌 실 클래스를 가져오기 때문에 이를 mocking 함수로 변경
 type MockRepository<T = any> = Partial<Record<keyof Repository<T>, jest.Mock>>;
 
 describe('UserService', () => {
   let service: UsersService;
   let userRepository: MockRepository<User>;
-  let dataSource: DataSource;
+  let verificationRepository: MockRepository<Verification>;
   let emailService: EmailService;
+  let jwtService: JwtService;
 
   beforeEach(async () => {
     // mock 객체를 DI 하기위한 설정
@@ -56,19 +60,20 @@ describe('UserService', () => {
         },
         {
           provide: JwtService,
-          useValue: mockJwtService,
+          useValue: mockJwtService(),
         },
         {
           provide: EmailService,
-          useValue: mockEmailService,
+          useValue: mockEmailService(),
         },
       ],
     }).compile();
 
     service = module.get<UsersService>(UsersService);
     userRepository = module.get(getRepositoryToken(User));
-    dataSource = module.get<DataSource>(DataSource);
+    verificationRepository = module.get(getRepositoryToken(Verification));
     emailService = module.get<EmailService>(EmailService);
+    jwtService = module.get<JwtService>(JwtService);
   });
 
   it('should be defined', () => {
@@ -80,6 +85,12 @@ describe('UserService', () => {
       email: 'test@gmail,com',
       password: '111222',
       role: 0,
+    };
+
+    const verificationResult = {
+      code: 'testCode',
+      user: createAccountArgs,
+      createCode: jest.fn(),
     };
 
     it('should fail if user exists', async () => {
@@ -99,12 +110,18 @@ describe('UserService', () => {
     it('should create a new user', async () => {
       // mockResolvedValue 는 mocking method 호출전에 정의 할것
       userRepository.findOne.mockResolvedValue(undefined);
-      mockTransactionalEntityManager.save.mockResolvedValue(createAccountArgs);
 
+      // 동일한 함수가 여러번 호출되는식으로 mocking 할때에는 ~ Once 를 사용
+      mockTransactionalEntityManager.save
+        .mockResolvedValueOnce(createAccountArgs)
+        .mockResolvedValueOnce(verificationResult);
       const result = await service.createAccount(createAccountArgs);
-      expect(dataSource.transaction).toHaveBeenCalledTimes(1);
       expect(mockTransactionalEntityManager.save).toHaveBeenCalledTimes(2);
       expect(emailService.sendVerificationEmail).toHaveBeenCalledTimes(1);
+      expect(emailService.sendVerificationEmail).toHaveBeenCalledWith(
+        'test@gmail,com',
+        'testCode'
+      );
 
       expect(result).toEqual({ ok: true });
     });
@@ -154,16 +171,110 @@ describe('UserService', () => {
       };
 
       userRepository.findOne.mockResolvedValue(mockUser);
-      mockJwtService.sign.mockReturnValue('gen token');
       const result = await service.login(loginArgs);
-      expect(mockJwtService.sign).toHaveBeenCalledTimes(1);
-      expect(mockJwtService.sign).toHaveBeenCalledWith(mockUser.id);
-      expect(result).toEqual({ ok: true, token: expect.any(String) });
+      expect(jwtService.sign).toHaveBeenCalledTimes(1);
+      expect(jwtService.sign).toHaveBeenCalledWith(mockUser.id);
+      expect(result).toEqual({ ok: true, token: 'signed-token-baby' });
     });
   });
 
-  it.todo('findById');
-  it.todo('editProfile');
+  describe('findById', () => {
+    const mockUser = {
+      id: 1,
+      email: 'test@gmail.com',
+      role: 1,
+      checkPassword: jest.fn(() => Promise.resolve(false)),
+    };
+
+    it('should find an existing user', async () => {
+      userRepository.findOneOrFail.mockResolvedValue(mockUser);
+      const result = await service.findById(1);
+      expect(result).toEqual({ ok: true, user: expect.any(Object) });
+    });
+
+    it('should fail if user not found', async () => {
+      userRepository.findOneOrFail.mockRejectedValue(new Error());
+      const result = await service.findById(1);
+      expect(result).toEqual({ ok: false, error: 'User Not Found' });
+    });
+  });
+
+  describe('editProfile', () => {
+    const mockUser = {
+      id: 1,
+      email: 'test@gmail.com',
+      password: 'old_password',
+      emailVerified: true,
+      role: 1,
+      checkPassword: jest.fn(() => Promise.resolve(false)),
+      hashPassword: jest.fn(() => Promise.resolve('new_password')),
+    };
+
+    it('should change email if email param input', async () => {
+      // unit test 시에는 필요한 데이터만 만들어서 사용할것
+      const editProfileArgs = {
+        email: 'new_test@gmail.com',
+      };
+
+      const oldUser = {
+        email: 'test@gmail.com',
+        emailVerified: true,
+      };
+
+      const newUser = {
+        email: 'new_test@gmail.com',
+        emailVerified: false,
+      };
+
+      const newVerification = { code: 'code' };
+
+      mockTransactionalEntityManager.findOne.mockResolvedValue(oldUser);
+      verificationRepository.create.mockReturnValue(newVerification);
+      mockTransactionalEntityManager.save
+        .mockResolvedValueOnce(newVerification)
+        .mockResolvedValueOnce(newUser);
+
+      await service.editProfile(1, editProfileArgs);
+      expect(mockTransactionalEntityManager.findOne).toHaveBeenCalledWith(
+        User,
+        {
+          where: { id: 1 },
+        }
+      );
+
+      expect(verificationRepository.create).toHaveBeenCalledWith({
+        user: newUser,
+      });
+
+      expect(mockTransactionalEntityManager.save).toHaveBeenCalledWith(
+        Verification,
+        newVerification
+      );
+
+      expect(emailService.sendVerificationEmail).toHaveBeenCalledWith(
+        newUser.email,
+        newVerification.code
+      );
+    });
+
+    it('should update password if password param input', async () => {
+      const editProfileArgs = {
+        password: 'new password',
+      };
+
+      mockTransactionalEntityManager.findOne.mockResolvedValue(mockUser);
+      await service.editProfile(1, editProfileArgs);
+      expect(mockTransactionalEntityManager.save).toHaveBeenCalledTimes(1);
+
+      const updateMockUser = { ...mockUser, password: 'new password' };
+      expect(mockTransactionalEntityManager.save).toHaveBeenCalledTimes(1);
+      expect(mockTransactionalEntityManager.save).toHaveBeenCalledWith(
+        User,
+        updateMockUser
+      );
+    });
+  });
+
   it.todo('verifyEmail');
   it.todo('userProfile');
 });

@@ -92,8 +92,17 @@ export class UsersService {
     }
   }
 
-  async findById(id: number): Promise<User> {
-    return await this.users.findOne({ where: { id: id } });
+  async findById(id: number): Promise<UserProfileOutput> {
+    try {
+      const user = await this.users.findOneOrFail({ where: { id: id } });
+
+      return {
+        ok: true,
+        user: user,
+      };
+    } catch (error) {
+      return { ok: false, error: 'User Not Found' };
+    }
   }
 
   async editProfile(
@@ -171,23 +180,6 @@ export class UsersService {
   async userProfile(
     userProfileInput: UserProfileInput
   ): Promise<UserProfileOutput> {
-    const errorObj = {
-      error: 'User Not Found',
-      ok: false,
-    };
-
-    try {
-      const user = await this.findById(userProfileInput.userId);
-      if (!user) {
-        return errorObj;
-      }
-
-      return {
-        ok: true,
-        user,
-      };
-    } catch (e) {
-      return errorObj;
-    }
+    return await this.findById(userProfileInput.userId);
   }
 }
