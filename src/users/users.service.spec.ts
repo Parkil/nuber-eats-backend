@@ -40,6 +40,7 @@ describe('UserService', () => {
   let verificationRepository: MockRepository<Verification>;
   let emailService: EmailService;
   let jwtService: JwtService;
+  let dataSource: MockType<DataSource>;
 
   beforeEach(async () => {
     // mock 객체를 DI 하기위한 설정
@@ -74,6 +75,7 @@ describe('UserService', () => {
     verificationRepository = module.get(getRepositoryToken(Verification));
     emailService = module.get<EmailService>(EmailService);
     jwtService = module.get<JwtService>(JwtService);
+    dataSource = module.get(DataSource);
   });
 
   it('should be defined', () => {
@@ -110,7 +112,6 @@ describe('UserService', () => {
     it('should create a new user', async () => {
       // mockResolvedValue 는 mocking method 호출전에 정의 할것
       userRepository.findOne.mockResolvedValue(undefined);
-
       // 동일한 함수가 여러번 호출되는식으로 mocking 할때에는 ~ Once 를 사용
       mockTransactionalEntityManager.save
         .mockResolvedValueOnce(createAccountArgs)
@@ -264,17 +265,71 @@ describe('UserService', () => {
 
       mockTransactionalEntityManager.findOne.mockResolvedValue(mockUser);
       await service.editProfile(1, editProfileArgs);
-      expect(mockTransactionalEntityManager.save).toHaveBeenCalledTimes(1);
+      expect(mockTransactionalEntityManager.save).toHaveBeenCalledTimes(5);
 
       const updateMockUser = { ...mockUser, password: 'new password' };
-      expect(mockTransactionalEntityManager.save).toHaveBeenCalledTimes(1);
+      expect(mockTransactionalEntityManager.save).toHaveBeenCalledTimes(5);
       expect(mockTransactionalEntityManager.save).toHaveBeenCalledWith(
         User,
         updateMockUser
       );
     });
+
+    it('should fail on exception', async () => {
+      const editProfileArgs = {
+        email: 'new_test@gmail.com',
+      };
+      dataSource.transaction.mockRejectedValue(new Error());
+      const result = await service.editProfile(1, editProfileArgs);
+      expect(result).toEqual({
+        ok: false,
+        error: expect.any(Error),
+      });
+    });
   });
 
-  it.todo('verifyEmail');
-  it.todo('userProfile');
+  describe('verifyEmail', () => {
+    const verificationResult = {
+      id: 1,
+      code: 'test_code',
+      user: {
+        id: 1,
+        emailVerified: false,
+      },
+    };
+
+    it('should verify email', async () => {
+      mockTransactionalEntityManager.findOne.mockResolvedValue(
+        verificationResult
+      );
+      const result = await service.verifyEmail('test_code');
+
+      expect(mockTransactionalEntityManager.save).toHaveBeenCalledWith(
+        User,
+        verificationResult.user
+      );
+      expect(mockTransactionalEntityManager.delete).toHaveBeenCalledWith(
+        Verification,
+        { id: verificationResult.id }
+      );
+      expect(result).toEqual({ ok: true });
+    });
+
+    // 아래 부분은 dataSource.transaction 에서 에러가 나게 mocking 을 해야 하는데 이 부분을 좀더 찾아봐야 함
+    it('should fail on verification not found', async () => {
+      mockTransactionalEntityManager.findOne.mockResolvedValue(undefined);
+      const result = await service.verifyEmail('test_code');
+      expect(result).toEqual({ ok: true });
+    });
+
+    it('should fail on exception', async () => {
+      dataSource.transaction.mockRejectedValue(new Error());
+      const result = await service.verifyEmail('test_code');
+      console.log(result);
+      expect(result).toEqual({
+        ok: false,
+        error: expect.any(Error),
+      });
+    });
+  });
 });

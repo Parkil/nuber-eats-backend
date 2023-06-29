@@ -7,6 +7,7 @@ import { DataSource } from 'typeorm';
 export const mockTransactionalEntityManager = {
   save: jest.fn(),
   findOne: jest.fn(),
+  delete: jest.fn(),
 };
 
 export const dataSourceMockFactory: () => MockType<DataSource> = jest.fn(
@@ -14,7 +15,11 @@ export const dataSourceMockFactory: () => MockType<DataSource> = jest.fn(
     createQueryRunner: jest.fn(),
     getRepository: jest.fn(),
     transaction: jest.fn().mockImplementation((cb) => {
-      cb(mockTransactionalEntityManager);
+      try {
+        cb(mockTransactionalEntityManager);
+      } catch (e) {
+        throw new Error();
+      }
     }),
   })
 );
