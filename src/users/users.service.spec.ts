@@ -325,7 +325,6 @@ describe('UserService', () => {
     it('should fail on exception', async () => {
       dataSource.transaction.mockRejectedValue(new Error());
       const result = await service.verifyEmail('test_code');
-      console.log(result);
       expect(result).toEqual({
         ok: false,
         error: expect.any(Error),

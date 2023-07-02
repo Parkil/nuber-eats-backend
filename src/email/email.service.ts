@@ -17,8 +17,6 @@ export class EmailService {
     const fieldObj = {};
     emailVars.forEach((eVar) => (fieldObj[eVar.key] = eVar.value));
 
-    console.log('fieldObj : ', fieldObj);
-
     superagent
       .post(`https://api.mailgun.net/v3/${this.options.emailDomain}/messages`)
       .set('Authorization', `Basic ${Buffer.from(rawKey).toString('base64')}`)
