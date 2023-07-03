@@ -7,7 +7,7 @@ import * as superagent from 'superagent';
 export class EmailService {
   constructor(@Inject(CONFIG_OPTIONS) private readonly options: EmailOptions) {}
 
-  private async sendEmail(
+  async sendEmail(
     subject: string,
     template: string,
     to_email: string,
