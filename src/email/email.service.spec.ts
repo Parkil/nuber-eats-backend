@@ -1,6 +1,7 @@
 import { EmailService } from './email.service';
 import { CONFIG_OPTIONS } from '../common/common.constants';
 import { Test } from '@nestjs/testing';
+import * as superagent from 'superagent';
 
 const emailOption = {
   apiKey: 'test_api_key',
@@ -93,6 +94,22 @@ describe('EmailService', () => {
           { key: 'v:code', value: CODE },
         ]
       );
+    });
+  });
+
+  describe('sendEmail', () => {
+    it('sends email', async () => {
+      await service.sendEmail('Verify Your Email', 'confirm', TO_EMAIL, [
+        { key: 'v:user_name', value: 'pu-haha' },
+        { key: 'v:code', value: CODE },
+      ]);
+
+      const callUrl = `https://api.mailgun.net/v3/${emailOption.emailDomain}/messages`;
+
+      expect(superagent.post).toHaveBeenCalledTimes(1);
+      expect(superagent.post).toHaveBeenCalledWith(callUrl);
+      expect(superagent.post(callUrl).field).toHaveBeenCalledTimes(5);
+      expect(superagent.post(callUrl).end).toHaveBeenCalledTimes(1);
     });
   });
 });
