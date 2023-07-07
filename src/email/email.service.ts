@@ -26,7 +26,9 @@ export class EmailService {
       .field('to', to_email)
       .field(fieldObj)
       .end((err, res) => {
-        console.log('res : ', res);
+        // if (err) {
+        //   console.log(res, err);
+        // }
       });
   }
 
