@@ -6,7 +6,10 @@ import { DataSource } from 'typeorm';
 
 describe('UserModule (e2e)', () => {
   let app: INestApplication;
+  let jwtToken: string;
   const GRAPHQL_ENDPOINT = '/graphql';
+  const EMAIL = 'test111@gmail.com';
+  const PASSWORD = '333444';
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -23,7 +26,6 @@ describe('UserModule (e2e)', () => {
   });
 
   describe('createAccount', () => {
-    const EMAIL = 'test111@gmail.com';
     it('should create account', () => {
       return request(app.getHttpServer())
         .post(GRAPHQL_ENDPOINT)
@@ -32,7 +34,7 @@ describe('UserModule (e2e)', () => {
             mutation {
               createAccount(input: {
                 email: "${EMAIL}",
-                password: "333444",
+                password: "${PASSWORD}",
                 role: Owner
               }) {
                 ok
@@ -43,14 +45,115 @@ describe('UserModule (e2e)', () => {
         })
         .expect(200)
         .expect((res) => {
-          expect(res.body.data.createAccount.ok).toBe(true);
-          expect(res.body.data.createAccount.error).toBe(null);
+          const {
+            body: {
+              data: { createAccount },
+            },
+          } = res;
+          expect(createAccount.ok).toBe(true);
+          expect(createAccount.error).toBe(null);
+        });
+    });
+
+    it('should fail if account already exists', () => {
+      return request(app.getHttpServer())
+        .post(GRAPHQL_ENDPOINT)
+        .send({
+          query: `
+            mutation {
+              createAccount(input: {
+                email: "${EMAIL}",
+                password: "${PASSWORD}",
+                role: Owner
+              }) {
+                ok
+                error
+              }
+            }
+          `,
+        })
+        .expect(200)
+        .expect((res) => {
+          const {
+            body: {
+              data: { createAccount },
+            },
+          } = res;
+          expect(createAccount.ok).toBe(false);
+          expect(createAccount.error).toBe(
+            'There is a user with that email already'
+          );
         });
     });
   });
 
+  describe('login', () => {
+    it('should login with correct credentials', () => {
+      return request(app.getHttpServer())
+        .post(GRAPHQL_ENDPOINT)
+        .send({
+          query: `
+            mutation {
+              login(input: {
+                email: "${EMAIL}",
+                password: "${PASSWORD}",
+              })
+              {
+                ok
+                error
+                token
+              }
+            }
+          `,
+        })
+        .expect(200)
+        .expect((res) => {
+          const {
+            body: {
+              data: { login },
+            },
+          } = res;
+
+          expect(login.ok).toBe(true);
+          expect(login.error).toBe(null);
+          expect(login.token).toEqual(expect.any(String));
+          jwtToken = login.token;
+        });
+    });
+
+    it('should not be able login with wrong credentials', () => {
+      return request(app.getHttpServer())
+        .post(GRAPHQL_ENDPOINT)
+        .send({
+          query: `
+            mutation {
+              login(input: {
+                email: "${EMAIL}",
+                password: "${PASSWORD}-1",
+              })
+              {
+                ok
+                error
+                token
+              }
+            }
+          `,
+        })
+        .expect(200)
+        .expect((res) => {
+          const {
+            body: {
+              data: { login },
+            },
+          } = res;
+
+          expect(login.ok).toBe(false);
+          expect(login.error).toEqual(expect.any(String));
+          expect(login.token).toBe(null);
+        });
+    });
+  });
   it.todo('userProfile');
-  it.todo('login');
   it.todo('me');
   it.todo('verifyEmail');
   it.todo('editProfile');
