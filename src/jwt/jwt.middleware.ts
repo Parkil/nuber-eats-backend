@@ -2,7 +2,6 @@ import { Injectable, NestMiddleware } from '@nestjs/common';
 import { NextFunction, Request, Response } from 'express';
 import { JwtService } from './jwt.service';
 import { UsersService } from '../users/users.service';
-import { UserProfileOutput } from '../users/dtos/user-profile.dto';
 
 @Injectable()
 export class JwtMiddleware implements NestMiddleware {
