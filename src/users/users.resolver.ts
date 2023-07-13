@@ -26,6 +26,12 @@ export class UsersResolver {
     return this.usersService.userProfile(userProfileInput);
   }
 
+  @Query(() => User)
+  @UseGuards(AuthGuard)
+  me(@AuthUser() authUser: User): User {
+    return authUser;
+  }
+
   @Mutation(() => CreateAccountOutput)
   async createAccount(
     @Args('input') createAccountInput: CreateAccountInput
