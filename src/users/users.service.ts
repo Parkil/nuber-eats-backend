@@ -152,23 +152,40 @@ export class UsersService {
 
   async verifyEmail(code: string): Promise<VerifyEmailOutput> {
     try {
-      await this.dataSource.transaction(async (entityManager) => {
-        const verification = await entityManager.findOne(Verification, {
-          where: { code: code },
-          // loadRelationIds: true, // loadRelationIds 관련 releation 의 id만 가져온다 이런점은 JPA 보다 나은듯
-          relations: ['user'], // releation 전체를 불러온다
-        });
+      // async 블록 내부에서 throw new Error 를 하게 되면 try~catch가 잘 작동하지 않는듯하다 이부분은 확인 필요
+      const result = await this.dataSource.transaction(
+        async (entityManager) => {
+          const verification = await entityManager.findOne(Verification, {
+            where: { code: code },
+            // loadRelationIds: true, // loadRelationIds 관련 releation 의 id만 가져온다 이런점은 JPA 보다 나은듯
+            relations: ['user'], // releation 전체를 불러온다
+          });
 
-        if (verification) {
-          verification.user.emailVerified = true;
-          await entityManager.save(User, verification.user);
-          await entityManager.delete(Verification, { id: verification.id });
+          let execResult: boolean;
+
+          if (verification) {
+            verification.user.emailVerified = true;
+            await entityManager.save(User, verification.user);
+            await entityManager.delete(Verification, { id: verification.id });
+            execResult = true;
+          } else {
+            execResult = false;
+          }
+
+          return execResult;
         }
-      });
+      );
 
-      return {
-        ok: true,
-      };
+      if (result) {
+        return {
+          ok: true,
+        };
+      } else {
+        return {
+          ok: false,
+          error: 'Incorrect Code',
+        };
+      }
     } catch (e) {
       return {
         ok: false,

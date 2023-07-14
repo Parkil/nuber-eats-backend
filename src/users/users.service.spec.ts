@@ -319,7 +319,7 @@ describe('UserService', () => {
     it('should fail on verification not found', async () => {
       mockTransactionalEntityManager.findOne.mockResolvedValue(undefined);
       const result = await service.verifyEmail('test_code');
-      expect(result).toEqual({ ok: true });
+      expect(result).toEqual({ ok: false, error: 'Incorrect Code' });
     });
 
     it('should fail on exception', async () => {
