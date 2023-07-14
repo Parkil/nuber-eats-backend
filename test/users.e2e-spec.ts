@@ -5,11 +5,14 @@ import * as request from 'supertest';
 import { DataSource, Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { User } from '../src/users/entities/user.entity';
+import { Verification } from '../src/users/entities/verification.entity';
 
 describe('UserModule (e2e)', () => {
   let app: INestApplication;
   let jwtToken: string;
   let userRepository: Repository<User>;
+  let verificationRepository: Repository<Verification>;
+  let userId: number;
 
   const GRAPHQL_ENDPOINT = '/graphql';
   const EMAIL = 'test111@gmail.com';
@@ -22,10 +25,14 @@ describe('UserModule (e2e)', () => {
 
     app = module.createNestApplication();
     userRepository = module.get<Repository<User>>(getRepositoryToken(User));
+    verificationRepository = module.get<Repository<Verification>>(
+      getRepositoryToken(Verification)
+    );
     await app.init();
   });
 
   afterAll(async () => {
+    // 모든 테스트가 종료되면 DB 초기화
     const dataSource = app.get(DataSource);
     await dataSource.synchronize(true);
   });
@@ -160,7 +167,6 @@ describe('UserModule (e2e)', () => {
   });
 
   describe('userProfile', () => {
-    let userId: number;
     beforeAll(async () => {
       const user = await userRepository.findOne({
         where: {
@@ -291,6 +297,75 @@ describe('UserModule (e2e)', () => {
         });
     });
   });
+
+  describe('verifyEmail', () => {
+    let code: string;
+    beforeAll(async () => {
+      const verification = await verificationRepository.findOne({
+        relations: ['user'],
+        where: {
+          user: {
+            id: userId,
+          },
+        },
+      });
+      code = verification.code;
+    });
+
+    it('should not verify if code is incorrect', () => {
+      return request(app.getHttpServer())
+        .post(GRAPHQL_ENDPOINT)
+        .send({
+          query: `mutation{
+            verifyEmail(input: {
+              code: "${code}-222"
+            }){
+              ok
+              error
+            }
+          }`,
+        })
+        .expect(200)
+        .expect((res) => {
+          const {
+            body: {
+              data: {
+                verifyEmail: { ok, error },
+              },
+            },
+          } = res;
+
+          expect(ok).toBe(false);
+          expect(error).toBe('Incorrect Code');
+        });
+    });
+
+    it('should verify if code is correct', () => {
+      return request(app.getHttpServer())
+        .post(GRAPHQL_ENDPOINT)
+        .send({
+          query: `mutation{
+            verifyEmail(input: {
+              code: "${code}"
+            }){
+              ok
+              error
+            }
+          }`,
+        })
+        .expect(200)
+        .expect((res) => {
+          const {
+            body: {
+              data: {
+                verifyEmail: { ok },
+              },
+            },
+          } = res;
+
+          expect(ok).toBe(true);
+        });
+    });
+  });
   it.todo('editProfile');
-  it.todo('verifyEmail');
 });
