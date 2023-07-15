@@ -16,7 +16,9 @@ describe('UserModule (e2e)', () => {
 
   const GRAPHQL_ENDPOINT = '/graphql';
   const EMAIL = 'test111@gmail.com';
+  const UPDATE_EMAIL = 'test222@gmail.com';
   const PASSWORD = '333444';
+  const UPDATE_PASSWORD = '444555';
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -367,5 +369,83 @@ describe('UserModule (e2e)', () => {
         });
     });
   });
-  it.todo('editProfile');
+  describe('editProfile', () => {
+    it('should update email if email param input', () => {
+      return request(app.getHttpServer())
+        .post(GRAPHQL_ENDPOINT)
+        .set('x-jwt', jwtToken)
+        .send({
+          query: `mutation{
+            editProfile(input: {
+              email: "${UPDATE_EMAIL}",
+            }){
+              ok
+              error
+            }
+          }`,
+        })
+        .expect(200)
+        .expect(async (res) => {
+          const {
+            body: {
+              data: {
+                editProfile: { ok, error },
+              },
+            },
+          } = res;
+
+          const updateUser = await userRepository.findOne({
+            where: {
+              email: UPDATE_EMAIL,
+            },
+          });
+
+          expect(ok).toBe(true);
+          expect(error).toBe(null);
+          expect(updateUser.email).toBe(UPDATE_EMAIL);
+          expect(updateUser.emailVerified).toBe(false);
+        });
+    });
+
+    it('should update password if password param input', () => {
+      const updatePassword = '444555';
+
+      return request(app.getHttpServer())
+        .post(GRAPHQL_ENDPOINT)
+        .set('x-jwt', jwtToken)
+        .send({
+          query: `mutation{
+            editProfile(input: {
+              password: "${updatePassword}",
+            }){
+              ok
+              error
+            }
+          }`,
+        })
+        .expect(200)
+        .expect(async (res) => {
+          const {
+            body: {
+              data: {
+                editProfile: { ok, error },
+              },
+            },
+          } = res;
+
+          const updateUser = await userRepository.findOne({
+            where: {
+              email: UPDATE_EMAIL,
+            },
+            select: ['password'],
+          });
+
+          const pwdChkResult = await updateUser.checkPassword(UPDATE_PASSWORD);
+
+          expect(ok).toBe(true);
+          expect(error).toBe(null);
+          expect(pwdChkResult).toBe(true);
+        });
+    });
+  });
 });
