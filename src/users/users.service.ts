@@ -116,6 +116,14 @@ export class UsersService {
         });
 
         if (email) {
+          const chkUser = await entityManager.findOne(User, {
+            where: { email: email },
+          });
+
+          if (chkUser) {
+            throw 'duplicate email';
+          }
+
           user.email = email;
           user.emailVerified = false;
 
@@ -137,6 +145,7 @@ export class UsersService {
         }
 
         await entityManager.save(User, user);
+        return undefined;
       });
 
       return {
@@ -152,40 +161,25 @@ export class UsersService {
 
   async verifyEmail(code: string): Promise<VerifyEmailOutput> {
     try {
-      // async 블록 내부에서 throw new Error 를 하게 되면 try~catch가 잘 작동하지 않는듯하다 이부분은 확인 필요
-      const result = await this.dataSource.transaction(
-        async (entityManager) => {
-          const verification = await entityManager.findOne(Verification, {
-            where: { code: code },
-            // loadRelationIds: true, // loadRelationIds 관련 releation 의 id만 가져온다 이런점은 JPA 보다 나은듯
-            relations: ['user'], // releation 전체를 불러온다
-          });
+      await this.dataSource.transaction(async (entityManager) => {
+        const verification = await entityManager.findOne(Verification, {
+          where: { code: code },
+          // loadRelationIds: true, // loadRelationIds 관련 releation 의 id만 가져온다 이런점은 JPA 보다 나은듯
+          relations: ['user'], // releation 전체를 불러온다
+        });
 
-          let execResult: boolean;
-
-          if (verification) {
-            verification.user.emailVerified = true;
-            await entityManager.save(User, verification.user);
-            await entityManager.delete(Verification, { id: verification.id });
-            execResult = true;
-          } else {
-            execResult = false;
-          }
-
-          return execResult;
+        if (verification) {
+          verification.user.emailVerified = true;
+          await entityManager.save(User, verification.user);
+          await entityManager.delete(Verification, { id: verification.id });
+        } else {
+          throw 'Incorrect Code';
         }
-      );
+      });
 
-      if (result) {
-        return {
-          ok: true,
-        };
-      } else {
-        return {
-          ok: false,
-          error: 'Incorrect Code',
-        };
-      }
+      return {
+        ok: true,
+      };
     } catch (e) {
       return {
         ok: false,

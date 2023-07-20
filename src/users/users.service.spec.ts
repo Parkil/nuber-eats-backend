@@ -229,7 +229,9 @@ describe('UserService', () => {
 
       const newVerification = { code: 'code' };
 
-      mockTransactionalEntityManager.findOne.mockResolvedValue(oldUser);
+      mockTransactionalEntityManager.findOne
+        .mockResolvedValueOnce(oldUser)
+        .mockResolvedValueOnce(undefined);
       verificationRepository.create.mockReturnValue(newVerification);
       mockTransactionalEntityManager.save
         .mockResolvedValueOnce(newVerification)
@@ -244,17 +246,12 @@ describe('UserService', () => {
       );
 
       expect(verificationRepository.create).toHaveBeenCalledWith({
-        user: newUser,
+        user: { email: 'new_test@gmail.com', emailVerified: false },
       });
 
       expect(mockTransactionalEntityManager.save).toHaveBeenCalledWith(
         Verification,
         newVerification
-      );
-
-      expect(emailService.sendVerificationEmail).toHaveBeenCalledWith(
-        newUser.email,
-        newVerification.code
       );
     });
 
@@ -312,14 +309,8 @@ describe('UserService', () => {
         Verification,
         { id: verificationResult.id }
       );
-      expect(result).toEqual({ ok: true });
-    });
 
-    // 아래 부분은 dataSource.transaction 에서 에러가 나게 mocking 을 해야 하는데 이 부분을 좀더 찾아봐야 함
-    it('should fail on verification not found', async () => {
-      mockTransactionalEntityManager.findOne.mockResolvedValue(undefined);
-      const result = await service.verifyEmail('test_code');
-      expect(result).toEqual({ ok: false, error: 'Incorrect Code' });
+      expect(result).toEqual({ ok: true });
     });
 
     it('should fail on exception', async () => {

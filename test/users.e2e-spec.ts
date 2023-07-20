@@ -369,7 +369,37 @@ describe('UserModule (e2e)', () => {
         });
     });
   });
+
   describe('editProfile', () => {
+    it('should fail if email already exist', () => {
+      return request(app.getHttpServer())
+        .post(GRAPHQL_ENDPOINT)
+        .set('x-jwt', jwtToken)
+        .send({
+          query: `mutation{
+            editProfile(input: {
+              email: "${EMAIL}",
+            }){
+              ok
+              error
+            }
+          }`,
+        })
+        .expect(200)
+        .expect(async (res) => {
+          const {
+            body: {
+              data: {
+                editProfile: { ok, error },
+              },
+            },
+          } = res;
+
+          expect(ok).toBe(false);
+          expect(error).toBe('duplicate email');
+        });
+    });
+
     it('should update email if email param input', () => {
       return request(app.getHttpServer())
         .post(GRAPHQL_ENDPOINT)
