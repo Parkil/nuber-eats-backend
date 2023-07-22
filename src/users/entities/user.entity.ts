@@ -1,4 +1,4 @@
-import { BeforeInsert, BeforeUpdate, Column, Entity } from 'typeorm';
+import { BeforeInsert, BeforeUpdate, Column, Entity, OneToMany } from 'typeorm';
 import { CoreEntity } from '../../common/entities/core.entity';
 import {
   Field,
@@ -6,9 +6,10 @@ import {
   ObjectType,
   registerEnumType,
 } from '@nestjs/graphql';
-import { IsEmail, IsEnum, IsString } from 'class-validator';
+import { IsBoolean, IsEmail, IsEnum, IsString } from 'class-validator';
 import * as bcrypt from 'bcrypt';
 import { InternalServerErrorException } from '@nestjs/common';
+import { Restaurant } from '../../restaurnats/entities/restaurant.entity';
 
 enum UserRole {
   Client,
@@ -18,7 +19,7 @@ enum UserRole {
 
 registerEnumType(UserRole, { name: 'UserRole' });
 
-@InputType({ isAbstract: true })
+@InputType('UserInputType', { isAbstract: true })
 @ObjectType()
 @Entity()
 export class User extends CoreEntity {
@@ -44,7 +45,12 @@ export class User extends CoreEntity {
 
   @Column({ default: false })
   @Field(() => Boolean)
+  @IsBoolean()
   emailVerified: boolean;
+
+  @Field(() => [Restaurant])
+  @OneToMany(() => Restaurant, (restaurant) => restaurant.owner)
+  restaurants: Restaurant[];
 
   // BeforeInsert, BeforeUpdate 는 entity 를 이용한 insert, update 에서만 동작한다
   @BeforeInsert()
