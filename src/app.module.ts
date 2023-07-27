@@ -19,6 +19,7 @@ import { EmailModule } from './email/email.module';
 import { Restaurant } from './restaurnats/entities/restaurant.entity';
 import { Category } from './restaurnats/entities/category.entity';
 import { RestaurantsModule } from './restaurnats/restaurants.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { RestaurantsModule } from './restaurnats/restaurants.module';
       synchronize: process.env.NODE_ENV !== 'prod',
       entities: [User, Verification, Restaurant, Category],
     }),
+    AuthModule,
     UsersModule,
     RestaurantsModule,
     JwtModule.forRoot({

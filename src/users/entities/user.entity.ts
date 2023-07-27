@@ -11,10 +11,10 @@ import * as bcrypt from 'bcrypt';
 import { InternalServerErrorException } from '@nestjs/common';
 import { Restaurant } from '../../restaurnats/entities/restaurant.entity';
 
-enum UserRole {
-  Client,
-  Owner,
-  Delivery,
+export enum UserRole {
+  Client = 'Client',
+  Owner = 'Owner',
+  Delivery = 'Delivery',
 }
 
 registerEnumType(UserRole, { name: 'UserRole' });
@@ -49,7 +49,9 @@ export class User extends CoreEntity {
   emailVerified: boolean;
 
   @Field(() => [Restaurant])
-  @OneToMany(() => Restaurant, (restaurant) => restaurant.owner)
+  @OneToMany(() => Restaurant, (restaurant) => restaurant.owner, {
+    onDelete: 'CASCADE',
+  })
   restaurants: Restaurant[];
 
   // BeforeInsert, BeforeUpdate 는 entity 를 이용한 insert, update 에서만 동작한다

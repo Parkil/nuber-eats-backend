@@ -1,5 +1,5 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { Column, Entity, ManyToOne } from 'typeorm';
+import { Column, Entity, ManyToOne, RelationId } from 'typeorm';
 import { IsString, Length } from 'class-validator';
 import { CoreEntity } from '../../common/entities/core.entity';
 import { Category } from './category.entity';
@@ -33,4 +33,8 @@ export class Restaurant extends CoreEntity {
   @Field(() => User)
   @ManyToOne(() => User, (user) => user.restaurants)
   owner: User;
+
+  // 연관관계 에 있는 entity 의 key 값을 가져온다 JPA 에도 있는지 확인 필요
+  @RelationId((restaurant: Restaurant) => restaurant.owner)
+  ownerId: number;
 }
