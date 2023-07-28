@@ -1,7 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Restaurant } from './entities/restaurant.entity';
-import { Repository } from 'typeorm';
 import {
   CreateRestaurantsInput,
   CreateRestaurantsOutput,
@@ -13,12 +10,16 @@ import {
 } from './dtos/edit-restaurants.input';
 import { CategoryRepository } from './repositories/category.repository';
 import { Category } from './entities/category.entity';
+import {
+  DeleteRestaurantsInput,
+  DeleteRestaurantsOutput,
+} from './dtos/delete-restaurants.input';
+import { RestaurantRepository } from './repositories/restaurant.repository';
 
 @Injectable()
 export class RestaurantService {
   constructor(
-    @InjectRepository(Restaurant)
-    private readonly restaurants: Repository<Restaurant>,
+    private readonly restaurants: RestaurantRepository,
     private readonly categories: CategoryRepository
   ) {}
 
@@ -52,19 +53,10 @@ export class RestaurantService {
     owner: User
   ): Promise<EditRestaurantsOutput> {
     try {
-      const restaurant = await this.restaurants.findOne({
-        where: {
-          id: editRestaurantsInput.restaurantId,
-        },
-      });
-
-      if (!restaurant) {
-        throw 'Restaurant not found';
-      }
-
-      if (owner.id !== restaurant.ownerId) {
-        throw 'You can`t edit a restaurant that you dont own';
-      }
+      await this.restaurants.verifyOwner(
+        editRestaurantsInput.restaurantId,
+        owner.id
+      );
 
       let category: Category = null;
       if (editRestaurantsInput.categoryName) {
@@ -81,6 +73,25 @@ export class RestaurantService {
           ...(category && { category }),
         },
       ]);
+
+      return {
+        ok: true,
+      };
+    } catch (e) {
+      return {
+        ok: false,
+        error: e,
+      };
+    }
+  }
+
+  async deleteRestaurant(
+    { id }: DeleteRestaurantsInput,
+    owner: User
+  ): Promise<DeleteRestaurantsOutput> {
+    try {
+      await this.restaurants.verifyOwner(id, owner.id);
+      await this.restaurants.delete(id);
 
       return {
         ok: true,
