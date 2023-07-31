@@ -15,6 +15,7 @@ import {
   DeleteRestaurantsOutput,
 } from './dtos/delete-restaurants.input';
 import { RestaurantRepository } from './repositories/restaurant.repository';
+import { AllCategoriesOutput } from './dtos/all-categories.dto';
 
 @Injectable()
 export class RestaurantService {
@@ -102,5 +103,31 @@ export class RestaurantService {
         error: e,
       };
     }
+  }
+
+  async allCategories(): Promise<AllCategoriesOutput> {
+    try {
+      const categories = await this.categories.find();
+
+      return {
+        ok: true,
+        categories: categories,
+      };
+    } catch (e) {
+      return {
+        ok: false,
+        error: e,
+      };
+    }
+  }
+
+  async restaurantCount(category: Category): Promise<number> {
+    return await this.restaurants.count({
+      where: {
+        category: {
+          id: category.id,
+        },
+      },
+    });
   }
 }
