@@ -17,6 +17,7 @@ import {
 import { RestaurantRepository } from './repositories/restaurant.repository';
 import { AllCategoriesOutput } from './dtos/all-categories.dto';
 import { CategoryInput, CategoryOutput } from './dtos/category.dto';
+import { RestaurantsInput, RestaurantsOutput } from './dtos/restaurants.dto';
 
 @Injectable()
 export class RestaurantService {
@@ -97,6 +98,30 @@ export class RestaurantService {
 
       return {
         ok: true,
+      };
+    } catch (e) {
+      return {
+        ok: false,
+        error: e,
+      };
+    }
+  }
+
+  async allRestaurants({ page }: RestaurantsInput): Promise<RestaurantsOutput> {
+    try {
+      const restaurantCntPerPage = 25;
+      const [restaurants, totalCount] = await this.restaurants.findAndCount({
+        take: restaurantCntPerPage, // 페이지당 보여지는 개수
+        skip: (page - 1) * restaurantCntPerPage, // 시작점
+      });
+
+      const totalPages = Math.ceil(totalCount / restaurantCntPerPage);
+
+      return {
+        ok: true,
+        results: restaurants,
+        totalPages: totalPages,
+        totalItems: totalCount,
       };
     } catch (e) {
       return {

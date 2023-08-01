@@ -1,5 +1,6 @@
 import {
   Args,
+  InputType,
   Mutation,
   Parent,
   Query,
@@ -26,6 +27,7 @@ import {
 import { Category } from './entities/category.entity';
 import { AllCategoriesOutput } from './dtos/all-categories.dto';
 import { CategoryInput, CategoryOutput } from './dtos/category.dto';
+import { RestaurantsInput, RestaurantsOutput } from './dtos/restaurants.dto';
 
 @Resolver(() => Restaurant)
 export class RestaurantsResolver {
@@ -65,6 +67,13 @@ export class RestaurantsResolver {
       deleteRestaurantsInput,
       authUser
     );
+  }
+
+  @Query(() => RestaurantsOutput)
+  async allRestaurants(
+    @Args('input') restaurantsInput: RestaurantsInput
+  ): Promise<RestaurantsOutput> {
+    return await this.restaurantService.allRestaurants(restaurantsInput);
   }
 }
 
