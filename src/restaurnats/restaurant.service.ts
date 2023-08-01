@@ -139,7 +139,7 @@ export class RestaurantService {
       }
 
       const restaurantCntPerPage = 25;
-      category.restaurants = await this.restaurants.find({
+      const restaurants = await this.restaurants.find({
         where: { category: { id: category.id } },
         take: restaurantCntPerPage, // 페이지당 보여지는 개수
         skip: (page - 1) * restaurantCntPerPage, // 시작점
@@ -152,6 +152,7 @@ export class RestaurantService {
       return {
         ok: true,
         category: category,
+        restaurants: restaurants,
         totalPages: totalPages,
       };
     } catch (e) {
