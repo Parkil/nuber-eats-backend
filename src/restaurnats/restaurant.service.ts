@@ -18,6 +18,12 @@ import { RestaurantRepository } from './repositories/restaurant.repository';
 import { AllCategoriesOutput } from './dtos/all-categories.dto';
 import { CategoryInput, CategoryOutput } from './dtos/category.dto';
 import { RestaurantsInput, RestaurantsOutput } from './dtos/restaurants.dto';
+import { RestaurantInput, RestaurantOutput } from './dtos/restaurant.dto';
+import {
+  SearchRestaurantsInput,
+  SearchRestaurantsOutput,
+} from './dtos/search-restaurants.dto';
+import { ILike, Like } from 'typeorm';
 
 @Injectable()
 export class RestaurantService {
@@ -110,10 +116,13 @@ export class RestaurantService {
   async allRestaurants({ page }: RestaurantsInput): Promise<RestaurantsOutput> {
     try {
       const restaurantCntPerPage = 25;
-      const [restaurants, totalCount] = await this.restaurants.findAndCount({
-        take: restaurantCntPerPage, // 페이지당 보여지는 개수
-        skip: (page - 1) * restaurantCntPerPage, // 시작점
-      });
+
+      const [restaurants, totalCount] =
+        await this.restaurants.findAndCountPagination(
+          {},
+          page,
+          restaurantCntPerPage
+        );
 
       const totalPages = Math.ceil(totalCount / restaurantCntPerPage);
 
@@ -122,6 +131,63 @@ export class RestaurantService {
         results: restaurants,
         totalPages: totalPages,
         totalItems: totalCount,
+      };
+    } catch (e) {
+      return {
+        ok: false,
+        error: e,
+      };
+    }
+  }
+
+  async findRestaurantById({
+    restaurantId,
+  }: RestaurantInput): Promise<RestaurantOutput> {
+    try {
+      const restaurant = await this.restaurants.findOne({
+        where: { id: restaurantId },
+      });
+
+      if (!restaurant) {
+        return {
+          ok: false,
+          error: 'Cannot find Restaurant',
+        };
+      }
+
+      return {
+        ok: true,
+        restaurant: restaurant,
+      };
+    } catch (e) {
+      return {
+        ok: false,
+        error: e,
+      };
+    }
+  }
+
+  async findRestaurantsByName({
+    page,
+    query,
+  }: SearchRestaurantsInput): Promise<SearchRestaurantsOutput> {
+    try {
+      // todo  대소문자 검색이 되도록 변경 필요 내 생각에는 ilike
+      const restaurantCntPerPage = 3;
+      const [restaurants, totalCount] =
+        await this.restaurants.findAndCountPagination(
+          { name: ILike(`%${query}%`) }, // ILike - 대소문자 상관없이 검색
+          page,
+          restaurantCntPerPage
+        );
+
+      const totalPages = Math.ceil(totalCount / restaurantCntPerPage);
+
+      return {
+        ok: true,
+        searchResult: restaurants,
+        totalItems: totalCount,
+        totalPages: totalPages,
       };
     } catch (e) {
       return {

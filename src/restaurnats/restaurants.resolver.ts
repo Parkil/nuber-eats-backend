@@ -28,6 +28,8 @@ import { Category } from './entities/category.entity';
 import { AllCategoriesOutput } from './dtos/all-categories.dto';
 import { CategoryInput, CategoryOutput } from './dtos/category.dto';
 import { RestaurantsInput, RestaurantsOutput } from './dtos/restaurants.dto';
+import { RestaurantInput, RestaurantOutput } from './dtos/restaurant.dto';
+import { SearchRestaurantsInput, SearchRestaurantsOutput } from './dtos/search-restaurants.dto';
 
 @Resolver(() => Restaurant)
 export class RestaurantsResolver {
@@ -74,6 +76,22 @@ export class RestaurantsResolver {
     @Args('input') restaurantsInput: RestaurantsInput
   ): Promise<RestaurantsOutput> {
     return await this.restaurantService.allRestaurants(restaurantsInput);
+  }
+
+  @Query(() => RestaurantOutput)
+  async findRestaurant(
+    @Args('input') restaurantInput: RestaurantInput
+  ): Promise<RestaurantOutput> {
+    return await this.restaurantService.findRestaurantById(restaurantInput);
+  }
+
+  @Query(() => SearchRestaurantsOutput)
+  async findRestaurantsByName(
+    @Args('input') searchRestaurantsInput: SearchRestaurantsInput
+  ): Promise<SearchRestaurantsOutput> {
+    return await this.restaurantService.findRestaurantsByName(
+      searchRestaurantsInput
+    );
   }
 }
 
