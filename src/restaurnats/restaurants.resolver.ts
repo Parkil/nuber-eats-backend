@@ -1,6 +1,5 @@
 import {
   Args,
-  InputType,
   Mutation,
   Parent,
   Query,
@@ -29,7 +28,10 @@ import { AllCategoriesOutput } from './dtos/all-categories.dto';
 import { CategoryInput, CategoryOutput } from './dtos/category.dto';
 import { RestaurantsInput, RestaurantsOutput } from './dtos/restaurants.dto';
 import { RestaurantInput, RestaurantOutput } from './dtos/restaurant.dto';
-import { SearchRestaurantsInput, SearchRestaurantsOutput } from './dtos/search-restaurants.dto';
+import {
+  SearchRestaurantsInput,
+  SearchRestaurantsOutput,
+} from './dtos/search-restaurants.dto';
 
 @Resolver(() => Restaurant)
 export class RestaurantsResolver {
