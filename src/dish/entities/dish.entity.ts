@@ -1,20 +1,24 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Column, Entity, ManyToOne, RelationId } from 'typeorm';
 import { CoreEntity } from '../../common/entities/core.entity';
-import { IsNumber, IsString, Length } from 'class-validator';
+import { IsNumber, IsString, Length, ValidateNested } from 'class-validator';
 import { Restaurant } from '../../restaurnats/entities/restaurant.entity';
 
-@InputType('DishOptionInputType', { isAbstract: true })
+@InputType('DishOptionInputType')
 @ObjectType()
 class DishOption {
   @Field(() => String)
+  @IsString()
   name: string;
 
   @Field(() => [String], { nullable: true })
+  // { each: true } 를 수행하면 배열안의 값을 개별로 검증
+  @IsString({ each: true })
   choices?: string[];
 
-  @Field(() => Number)
-  extra: number;
+  @Field(() => Number, { nullable: true })
+  @IsNumber()
+  extra?: number;
 }
 
 @InputType('DishInputType', { isAbstract: true })
@@ -55,5 +59,6 @@ export class Dish extends CoreEntity {
   // 구조가 정형화된 데이터면 db 테이블로 가져가는것이 맞지만, 주문 옵션은 음식에 따라 비정형으로 구성이 될수 있기 때문에 이렇게 가져가는것도 하나의 방법이라고 본다
   @Field(() => [DishOption], { nullable: true })
   @Column({ type: 'json', nullable: true })
+  @ValidateNested({ each: true })
   options?: DishOption[];
 }
