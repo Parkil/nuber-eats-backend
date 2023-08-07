@@ -1,0 +1,25 @@
+### 레스토랑 생성
+GRAPHQL {{host}}/graphql
+x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NywiaWF0IjoxNjkxMzkwMTMwfQ.r7q9WN4syHHUB3X2wpd-Z7Hqob0AUji0jSprVABUdK8
+
+mutation {
+  createRestaurant(input:{
+    name: "식당11111"
+    coverImg: "https://"
+    address: "주소11111"
+    categoryName: "카테고리1"
+  }){
+    ok
+    error
+  }
+}
+
+> {%
+  client.test("response check", function() {
+    client.assert(response.status === 200, "Response status is not 200");
+  });
+
+  client.test("return value check", function() {
+    client.assert(response.body.data.createRestaurant.ok === true, "ok is not true");
+  });
+%}

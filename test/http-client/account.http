@@ -1,0 +1,48 @@
+### 회원 생성
+GRAPHQL {{host}}/graphql
+
+mutation {
+  createAccount(input:{
+    email: "test1@gmail.com"
+    password: "aaa000"
+    role: Owner
+  }){
+    ok
+    error
+  }
+}
+
+> {%
+  client.test("response check", function() {
+    client.assert(response.status === 200, "Response status is not 200");
+  });
+
+  client.test("return value check", function() {
+    client.assert(response.body.data.createAccount.ok === true, "ok is not true");
+  });
+%}
+
+### 로그인
+GRAPHQL {{host}}/graphql
+
+mutation {
+  login(input:{
+    email: "test1@gmail.com"
+    password: "aaa000"
+  }){
+    ok
+    error
+    token
+  }
+}
+
+> {%
+  client.test("response check", function() {
+    client.assert(response.status === 200, "Response status is not 200");
+  });
+
+  client.test("return value check", function() {
+    client.assert(response.body.data.login.ok === true, "ok is not true");
+  });
+%}
+

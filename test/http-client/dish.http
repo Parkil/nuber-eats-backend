@@ -1,0 +1,26 @@
+### Dish(레스토랑에서 파는 메뉴) 생성
+GRAPHQL {{host}}/graphql
+x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NywiaWF0IjoxNjkxMzkwMTMwfQ.r7q9WN4syHHUB3X2wpd-Z7Hqob0AUji0jSprVABUdK8
+
+mutation {
+  createDish(input:{
+    name:"메뉴11111"
+    price:12
+    description:"설명1111"
+    restaurantId:2
+    options:[{name:"opt1", choices:["1", "2", "3"], extra:1},{name:"opt2", choices:["1", "2", "3"], extra:2}]
+  }){
+    ok
+    error
+  }
+}
+
+> {%
+    client.test("response check", function () {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+
+    client.test("return value check", function () {
+        client.assert(response.body.data.createDish.ok === true, "ok is not true");
+    });
+%}
