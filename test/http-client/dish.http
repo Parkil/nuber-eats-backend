@@ -4,11 +4,14 @@ x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NywiaWF0IjoxNjkxMzk2NTYxfQ.F
 
 mutation {
   createDish(input:{
-    name:"메뉴22222"
+    name:"메뉴33333"
     price:12
-    description:"설명22222"
+    description:"설명33333"
     restaurantId:2
-    options:[{name:"opt1", choices:["1", "2", "3"], extra:1},{name:"opt2", choices:["1", "2", "3"], extra:2}]
+    options:[
+      {name:"opt1", extra:1},
+      {name:"opt2", choices:[{name:"subopt1", extra:1}, {name:"subopt2", extra:2}]}
+    ]
   }){
     ok
     error
@@ -31,11 +34,14 @@ x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NywiaWF0IjoxNjkxMzk2NTYxfQ.F
 
 mutation {
   editDish(input:{
-    name:"111111->수정"
+    name:"333333->수정"
     price: 22
     description: "333333->수정"
-    dishId:3
-    options:[{name:"opt1->1", choices:["1", "2", "3"], extra:1},{name:"opt2->2", choices:["1", "2", "3"], extra:2}]
+    dishId:6
+    options:[
+      {name:"opt1-1", extra:3},
+      {name:"opt2-1", choices:[{name:"subopt1-1", extra:1}, {name:"subopt2-1", extra:2}]}
+    ]
   }){
     ok
     error
