@@ -10,6 +10,7 @@ import { IsBoolean, IsEmail, IsEnum, IsString } from 'class-validator';
 import * as bcrypt from 'bcrypt';
 import { InternalServerErrorException } from '@nestjs/common';
 import { Restaurant } from '../../restaurnats/entities/restaurant.entity';
+import { Order } from '../../orders/entites/order.entity';
 
 export enum UserRole {
   Client = 'Client',
@@ -53,6 +54,14 @@ export class User extends CoreEntity {
     onDelete: 'CASCADE',
   })
   restaurants: Restaurant[];
+
+  @Field(() => [Order])
+  @OneToMany(() => Order, (order) => order.customer)
+  orders: Order[];
+
+  @Field(() => [Order])
+  @OneToMany(() => Order, (order) => order.driver)
+  rides: Order[];
 
   // BeforeInsert, BeforeUpdate 는 entity 를 이용한 insert, update 에서만 동작한다
   @BeforeInsert()

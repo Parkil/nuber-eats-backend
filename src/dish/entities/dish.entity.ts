@@ -12,12 +12,13 @@ class DishChoice {
   name: string;
 
   @Field(() => Number, { nullable: true })
+  @IsNumber()
   extra?: number;
 }
 
 @InputType('DishOptionInputType')
 @ObjectType()
-class DishOption {
+export class DishOption {
   @Field(() => String)
   @IsString()
   name: string;
