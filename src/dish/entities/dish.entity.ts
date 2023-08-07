@@ -4,6 +4,17 @@ import { CoreEntity } from '../../common/entities/core.entity';
 import { IsNumber, IsString, Length, ValidateNested } from 'class-validator';
 import { Restaurant } from '../../restaurnats/entities/restaurant.entity';
 
+@InputType('DishChoiceInputType', { isAbstract: true })
+@ObjectType()
+class DishChoice {
+  @Field(() => String)
+  @IsString()
+  name: string;
+
+  @Field(() => Number, { nullable: true })
+  extra?: number;
+}
+
 @InputType('DishOptionInputType')
 @ObjectType()
 class DishOption {
@@ -11,10 +22,10 @@ class DishOption {
   @IsString()
   name: string;
 
-  @Field(() => [String], { nullable: true })
+  @Field(() => [DishChoice], { nullable: true })
   // { each: true } 를 수행하면 배열안의 값을 개별로 검증
   @IsString({ each: true })
-  choices?: string[];
+  choices?: DishChoice[];
 
   @Field(() => Number, { nullable: true })
   @IsNumber()
