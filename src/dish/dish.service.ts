@@ -5,6 +5,8 @@ import { RestaurantRepository } from '../restaurnats/repositories/restaurant.rep
 import { Dish } from './entities/dish.entity';
 import { User } from '../users/entities/user.entity';
 import { instanceArrToObjArr } from '../common/json/json.util';
+import { EditDishInput, EditDishOutput } from './dtos/edit-dish.input';
+import { DeleteDishInput, DeleteDishOutput } from './dtos/delete-dish.input';
 
 export class DishService {
   constructor(
@@ -48,6 +50,65 @@ export class DishService {
           options: convertOptions,
         })
       );
+
+      return {
+        ok: true,
+      };
+    } catch (e) {
+      return {
+        ok: false,
+        error: e,
+      };
+    }
+  }
+
+  async editDish(
+    createDishInput: EditDishInput,
+    owner: User
+  ): Promise<EditDishOutput> {
+    try {
+      const dish = await this.dishes.findOne({
+        where: { id: createDishInput.dishId },
+      });
+
+      if (!dish) {
+        throw 'Dish Not Found';
+      }
+
+      await this.restaurants.verifyOwner(dish.restaurantId, owner.id);
+      const convertOptions = instanceArrToObjArr(createDishInput.options);
+      await this.dishes.save([
+        {
+          id: createDishInput.dishId,
+          ...createDishInput,
+          options: convertOptions,
+        },
+      ]);
+
+      return {
+        ok: true,
+      };
+    } catch (e) {
+      return {
+        ok: false,
+        error: e,
+      };
+    }
+  }
+
+  async deleteDish(
+    { dishId }: DeleteDishInput,
+    owner: User
+  ): Promise<DeleteDishOutput> {
+    try {
+      const dish = await this.dishes.findOne({ where: { id: dishId } });
+
+      if (!dish) {
+        throw 'Dish Not Found';
+      }
+
+      await this.restaurants.verifyOwner(dish.restaurantId, owner.id);
+      await this.dishes.delete(dishId);
 
       return {
         ok: true,

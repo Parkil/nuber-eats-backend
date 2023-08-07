@@ -1,12 +1,12 @@
 ### Dish(레스토랑에서 파는 메뉴) 생성
 GRAPHQL {{host}}/graphql
-x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NywiaWF0IjoxNjkxMzkwMTMwfQ.r7q9WN4syHHUB3X2wpd-Z7Hqob0AUji0jSprVABUdK8
+x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NywiaWF0IjoxNjkxMzk2NTYxfQ.FFLyq5ACU1K7xCSb7isbk-toMcYH0r9pkg7ZJtdYRIg
 
 mutation {
   createDish(input:{
-    name:"메뉴11111"
+    name:"메뉴22222"
     price:12
-    description:"설명1111"
+    description:"설명22222"
     restaurantId:2
     options:[{name:"opt1", choices:["1", "2", "3"], extra:1},{name:"opt2", choices:["1", "2", "3"], extra:2}]
   }){
@@ -22,5 +22,55 @@ mutation {
 
     client.test("return value check", function () {
         client.assert(response.body.data.createDish.ok === true, "ok is not true");
+    });
+%}
+
+### Dish 수정
+GRAPHQL {{host}}/graphql
+x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NywiaWF0IjoxNjkxMzk2NTYxfQ.FFLyq5ACU1K7xCSb7isbk-toMcYH0r9pkg7ZJtdYRIg
+
+mutation {
+  editDish(input:{
+    name:"111111->수정"
+    price: 22
+    description: "333333->수정"
+    dishId:3
+    options:[{name:"opt1->1", choices:["1", "2", "3"], extra:1},{name:"opt2->2", choices:["1", "2", "3"], extra:2}]
+  }){
+    ok
+    error
+  }
+}
+
+> {%
+    client.test("response check", function () {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+
+    client.test("return value check", function () {
+        client.assert(response.body.data.editDish.ok === true, "ok is not true");
+    });
+%}
+
+### Dish 삭제
+GRAPHQL {{host}}/graphql
+x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NywiaWF0IjoxNjkxMzk2NTA5fQ.KX_rwaJD9EL4hmBXSK1v4x6UJEBHZVV-7LZ3SDnM9f4
+
+mutation {
+  deleteDish(input:{
+    dishId: 1
+  }){
+    ok
+    error
+  }
+}
+
+> {%
+    client.test("response check", function () {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+
+    client.test("return value check", function () {
+        client.assert(response.body.data.deleteDish.ok === true, "ok is not true");
     });
 %}
