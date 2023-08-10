@@ -10,7 +10,6 @@ import { CoreEntity } from '../../common/entities/core.entity';
 import { IsEnum, IsNumber } from 'class-validator';
 import { User } from '../../users/entities/user.entity';
 import { Restaurant } from '../../restaurnats/entities/restaurant.entity';
-import { Dish } from '../../dish/entities/dish.entity';
 import { OrderItem } from './order-item.entity';
 
 export enum OrderStatus {
@@ -59,6 +58,6 @@ export class Order extends CoreEntity {
 
   @Field(() => OrderStatus)
   @IsEnum(OrderStatus)
-  @Column({ type: 'enum', enum: OrderStatus })
+  @Column({ type: 'enum', enum: OrderStatus, default: OrderStatus.Pending })
   status: OrderStatus;
 }

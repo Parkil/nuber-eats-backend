@@ -6,7 +6,7 @@ import { Restaurant } from '../../restaurnats/entities/restaurant.entity';
 
 @InputType('DishChoiceInputType', { isAbstract: true })
 @ObjectType()
-class DishChoice {
+export class DishChoice {
   @Field(() => String)
   @IsString()
   name: string;
@@ -24,8 +24,7 @@ export class DishOption {
   name: string;
 
   @Field(() => [DishChoice], { nullable: true })
-  // { each: true } 를 수행하면 배열안의 값을 개별로 검증
-  @IsString({ each: true })
+  @ValidateNested({ each: true })
   choices?: DishChoice[];
 
   @Field(() => Number, { nullable: true })

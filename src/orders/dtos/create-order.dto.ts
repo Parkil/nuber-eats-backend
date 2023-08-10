@@ -1,13 +1,27 @@
 import { CoreOutput } from '../../common/dtos/output.dto';
-import { Field, InputType, ObjectType, PickType } from '@nestjs/graphql';
-import { IsNumber } from 'class-validator';
-import { Order } from '../entites/order.entity';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { IsNumber, ValidateNested } from 'class-validator';
+import { OrderItemOption } from '../entites/order-item.entity';
 
 @InputType()
-export class CreateOrderInput extends PickType(Order, ['items'], InputType) {
+class CreateOrderItemInput {
+  @Field(() => Number)
+  @IsNumber()
+  dishId: number;
+
+  @Field(() => [OrderItemOption], { nullable: true })
+  options?: OrderItemOption[];
+}
+
+@InputType()
+export class CreateOrderInput {
   @Field(() => Number)
   @IsNumber()
   restaurantId: number;
+
+  @Field(() => [CreateOrderItemInput])
+  @ValidateNested({ each: true })
+  items: CreateOrderItemInput[];
 }
 
 @ObjectType()
