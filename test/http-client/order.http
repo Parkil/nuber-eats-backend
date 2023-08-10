@@ -1,0 +1,29 @@
+### 주문
+GRAPHQL {{host}}/graphql
+x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NywiaWF0IjoxNjkxNTc1MjEzfQ.2oZihAW8B-Lss3b_oXO1UUlVKUeDmiUHxOXApFMjh7Y
+
+mutation {
+  createOrder(input:{
+    restaurantId: 5
+    items:[
+      {
+        dishId: 32,
+        options: [{name: "SpicyLevel", choice:"1"}, {name: "Quntity", choice:"1"}]
+      }
+    ]
+  }){
+    ok
+    error
+  }
+}
+
+> {%
+  client.test("response check", function() {
+    client.assert(response.status === 200, "Response status is not 200");
+  });
+
+  client.test("return value check", function() {
+    client.assert(response.body.data.order.ok === true, "ok is not true");
+  });
+%}
+
