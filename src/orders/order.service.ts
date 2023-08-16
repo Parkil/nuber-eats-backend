@@ -31,6 +31,10 @@ export class OrderService {
         throw 'Restaurant not found';
       }
 
+      // todo dish가 레스토랑과도 연결이 되는데 그러면 dishId를 받는게 아니라 restaurant relation으로 dish를 가져와서 검색을 해야 하지 않나?
+      // todo 그런데 그렇게 되면 한 레스토랑에 dish가 많아지는 경우 전체 dish를 가져와서 검색을 해야 하기 때문에 문제가 발생할 소지가 있다
+      let orderFinalPrice = 0;
+      const orderItems: OrderItem[] = [];
       for (const item of items) {
         const dish = await this.dishes.findOne({ where: { id: item.dishId } });
 
@@ -38,6 +42,7 @@ export class OrderService {
           throw 'Dish Not Found';
         }
 
+        let dishFinalPrice = dish.price;
         for (const itemOption of item.options) {
           const dishOption = dish.options.find(
             (dishOption) => dishOption.name === itemOption.name
@@ -46,7 +51,7 @@ export class OrderService {
           if (dishOption) {
             if (dishOption.extra) {
               // option 자체에 붙는 추가 요금
-              console.log(`${dishOption.extra}`);
+              dishFinalPrice += dishOption.extra;
             } else {
               // option 내부의 선택사항에 붙는 추가 요금
               const dishOptionChoice = dishOption.choices.find(
@@ -54,30 +59,31 @@ export class OrderService {
               );
 
               if (dishOptionChoice?.extra) {
-                console.log(`${dishOptionChoice.extra}`);
+                dishFinalPrice += dishOptionChoice.extra;
               }
             }
           }
         }
 
-        /*
-        await this.orderitems.save(
+        orderFinalPrice += dishFinalPrice;
+
+        const orderItem = await this.orderitems.save(
           this.orderitems.create({
             dish,
             options: item.options,
           })
-        );*/
+        );
+        orderItems.push(orderItem);
       }
 
-      /*
       const order = await this.orders.save(
         this.orders.create({
           customer,
           restaurant,
+          total: orderFinalPrice,
+          items: orderItems,
         })
       );
-
-       */
 
       return {
         ok: true,
