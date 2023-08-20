@@ -1,14 +1,18 @@
 ### 주문
 GRAPHQL {{host}}/graphql
-x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NywiaWF0IjoxNjkxNTc1MjEzfQ.2oZihAW8B-Lss3b_oXO1UUlVKUeDmiUHxOXApFMjh7Y
+x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywiaWF0IjoxNjkyMTY2MDM2fQ.1HjJzYCp8KEqusnlXbv0-3F8hL1MyZPayG5skH-omm0
 
 mutation {
   createOrder(input:{
-    restaurantId: 5
+    restaurantId: 1
     items:[
       {
-        dishId: 32,
-        options: [{name: "SpicyLevel", choice:"1"}, {name: "Quntity", choice:"1"}]
+        dishId: 1,
+        options: [{name: "더 많이"}, {name: "맵기", choice:"보통"}]
+      },
+      {
+        dishId: 2,
+        options: [{name: "계란추가"}, {name: "맵기", choice:"보통"}, {name: "양", choice:"많이"}]
       }
     ]
   }){
@@ -23,7 +27,66 @@ mutation {
   });
 
   client.test("return value check", function() {
-    client.assert(response.body.data.order.ok === true, "ok is not true");
+    client.assert(response.body.data.createOrder.ok === true, "ok is not true");
   });
 %}
 
+### 주문 단건 조회
+GRAPHQL {{host}}/graphql
+x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywiaWF0IjoxNjkyMTY2MDM2fQ.1HjJzYCp8KEqusnlXbv0-3F8hL1MyZPayG5skH-omm0
+
+query {
+  viewOrder(input:{
+    orderId: 1
+  }){
+    ok
+    error
+    orderInfo {
+      customer
+      restaurant
+      total
+      status
+      items
+    }
+  }
+}
+
+> {%
+  client.test("response check", function() {
+    client.assert(response.status === 200, "Response status is not 200");
+  });
+
+  client.test("return value check", function() {
+    client.assert(response.body.data.viewOrder.ok === true, "ok is not true");
+  });
+%}
+
+### 주문 리스트 조회
+GRAPHQL {{host}}/graphql
+x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjkyNTc0MDUxfQ.xTEbFT8JQemsmYYM0u1hl8YCRetCALXzqW2GNjYZ-oU
+
+query {
+  viewOrders(input:{
+    status: Pending
+  }){
+    ok
+    error
+    orders {
+      status
+      total
+      items {
+        name
+      }
+    }
+  }
+}
+
+> {%
+  client.test("response check", function() {
+    client.assert(response.status === 200, "Response status is not 200");
+  });
+
+  client.test("return value check", function() {
+    client.assert(response.body.data.viewOrders.ok === true, "ok is not true");
+  });
+%}

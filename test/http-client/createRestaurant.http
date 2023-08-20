@@ -1,12 +1,12 @@
 ### 레스토랑 생성
 GRAPHQL {{host}}/graphql
-x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OCwiaWF0IjoxNjkxMzk1OTQzfQ.WF1fhAH3j3vrkRYRAct4AwYmQe1-2TiEWY8-HY5VZSg
+x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjkyMTY1NTYxfQ.rXMao0wVpp0E7COCIvJiNp6F2wV2lczL5Lzy7Lqligs
 
 mutation {
   createRestaurant(input:{
-    name: "식당22222"
+    name: "주인1식당"
     coverImg: "https://"
-    address: "주소22222"
+    address: "주인1식당 - 주소"
     categoryName: "카테고리1"
   }){
     ok
