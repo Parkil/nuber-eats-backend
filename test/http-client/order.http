@@ -33,20 +33,27 @@ mutation {
 
 ### 주문 단건 조회
 GRAPHQL {{host}}/graphql
-x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywiaWF0IjoxNjkyMTY2MDM2fQ.1HjJzYCp8KEqusnlXbv0-3F8hL1MyZPayG5skH-omm0
+x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjkyNjU2OTI3fQ.4aDdZYso1QHsfeOtafLaHuqNWpFsNF38mJz7Y-cgUo0
 
 query {
   viewOrder(input:{
-    orderId: 1
+    orderId: 6
   }){
     ok
     error
     orderInfo {
-      customer
-      restaurant
+      restaurant {
+        name
+        address
+      }
+      items {
+        options {
+          name
+          choice
+        }
+      }
       total
       status
-      items
     }
   }
 }
@@ -63,7 +70,7 @@ query {
 
 ### 주문 리스트 조회
 GRAPHQL {{host}}/graphql
-x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjkyNTc0MDUxfQ.xTEbFT8JQemsmYYM0u1hl8YCRetCALXzqW2GNjYZ-oU
+x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjkyNjU1MzkyfQ.yVjE7SYAjlINnw0-IlaKOvk-EBz5JVDGNZnm4vnMdy8
 
 query {
   viewOrders(input:{
@@ -74,9 +81,6 @@ query {
     orders {
       status
       total
-      items {
-        name
-      }
     }
   }
 }
@@ -88,5 +92,29 @@ query {
 
   client.test("return value check", function() {
     client.assert(response.body.data.viewOrders.ok === true, "ok is not true");
+  });
+%}
+
+### 주문 수정
+GRAPHQL {{host}}/graphql
+x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjkyNjU2OTI3fQ.4aDdZYso1QHsfeOtafLaHuqNWpFsNF38mJz7Y-cgUo0
+
+mutation {
+  editOrder(input:{
+    id: 6
+    status: Cooked
+  }){
+    ok
+    error
+  }
+}
+
+> {%
+  client.test("response check", function() {
+    client.assert(response.status === 200, "Response status is not 200");
+  });
+
+  client.test("return value check", function() {
+    client.assert(response.body.data.editOrder.ok === true, "ok is not true");
   });
 %}
