@@ -5,7 +5,14 @@ import {
   ObjectType,
   registerEnumType,
 } from '@nestjs/graphql';
-import { Column, Entity, JoinTable, ManyToMany, ManyToOne, RelationId } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  RelationId,
+} from 'typeorm';
 import { CoreEntity } from '../../common/entities/core.entity';
 import { IsEnum, IsNumber } from 'class-validator';
 import { User } from '../../users/entities/user.entity';
@@ -15,6 +22,7 @@ import { OrderItem } from './order-item.entity';
 export enum OrderStatus {
   Pending = 'Pending',
   Cooking = 'Cooking',
+  Cooked = 'Cooked',
   PickedUp = 'PickedUp',
   Delivered = 'Delivered',
 }
@@ -32,8 +40,8 @@ export class Order extends CoreEntity {
   })
   customer?: User;
 
-  // @RelationId((user: User) => user.orders)
-  // customerId?: number;
+  @RelationId((order: Order) => order.customer)
+  customerId: number;
 
   @Field(() => User, { nullable: true })
   @ManyToOne(() => User, (user) => user.rides, {
@@ -42,8 +50,8 @@ export class Order extends CoreEntity {
   })
   driver?: User;
 
-  // @RelationId((user: User) => user.rides)
-  // driverId?: number;
+  @RelationId((order: Order) => order.driver)
+  driverId?: number;
 
   @Field(() => Restaurant)
   @ManyToOne(() => Restaurant, (restaurant) => restaurant.orders, {

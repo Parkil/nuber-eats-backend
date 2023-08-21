@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Order } from './entites/order.entity';
+import { Order, OrderStatus } from './entites/order.entity';
 import { Repository } from 'typeorm';
 import { CreateOrderInput, CreateOrderOutput } from './dtos/create-order.dto';
 import { User, UserRole } from '../users/entities/user.entity';
@@ -9,6 +9,7 @@ import { OrderItem } from './entites/order-item.entity';
 import { Dish } from '../dish/entities/dish.entity';
 import { ViewOrderInput, ViewOrderOutput } from './dtos/view-order.dto';
 import { ViewOrdersInput, ViewOrdersOutput } from './dtos/view-orders.dto';
+import { EditOrderInput, EditOrderOutput } from './dtos/edit-order.dto';
 
 @Injectable()
 export class OrderService {
@@ -98,15 +99,26 @@ export class OrderService {
     }
   }
 
-  async viewOrder({ orderId }: ViewOrderInput): Promise<ViewOrderOutput> {
+  async viewOrder(
+    { orderId }: ViewOrderInput,
+    user: User
+  ): Promise<ViewOrderOutput> {
     try {
       const order = await this.orders.findOne({
-        relations: ['items'],
+        relations: ['items', 'restaurant'],
         where: { id: orderId },
       });
 
       if (!order) {
         throw 'Order Info Not Found';
+      }
+
+      if (
+        (user.role === UserRole.Client && order.customerId !== user.id) ||
+        (user.role === UserRole.Delivery && order.driverId !== user.id) ||
+        (user.role === UserRole.Owner && order.restaurant.ownerId !== user.id)
+      ) {
+        throw 'Invalid Approach';
       }
 
       return {
@@ -133,7 +145,7 @@ export class OrderService {
             customer: {
               id: user.id,
             },
-            status: status,
+            ...(status && { status }), // 해당 파라메터가 있을때에만 입력
           },
         });
       } else if (user.role === UserRole.Delivery) {
@@ -142,7 +154,7 @@ export class OrderService {
             driver: {
               id: user.id,
             },
-            status: status,
+            ...(status && { status }),
           },
         });
       } else {
@@ -153,7 +165,7 @@ export class OrderService {
               id: user.id,
             },
             orders: {
-              status: status,
+              ...(status && { status }),
             },
           },
           relations: ['orders'],
@@ -165,6 +177,59 @@ export class OrderService {
       return {
         ok: true,
         orders: orders,
+      };
+    } catch (e) {
+      return {
+        ok: false,
+        error: e,
+      };
+    }
+  }
+
+  async editOrder(
+    { id, status }: EditOrderInput,
+    user: User
+  ): Promise<EditOrderOutput> {
+    try {
+      const order = await this.orders.findOne({
+        relations: ['items', 'restaurant'],
+        where: { id: id },
+      });
+
+      if (!order) {
+        throw 'Order Info Not Found';
+      }
+
+      if (
+        (user.role === UserRole.Client && order.customerId !== user.id) ||
+        (user.role === UserRole.Delivery && order.driverId !== user.id) ||
+        (user.role === UserRole.Owner && order.restaurant.ownerId !== user.id)
+      ) {
+        throw 'Invalid Approach';
+      }
+
+      if (user.role === UserRole.Owner) {
+        if (status !== OrderStatus.Cooking && status !== OrderStatus.Cooked) {
+          throw 'Cant edit status';
+        }
+      }
+
+      if (user.role == UserRole.Delivery) {
+        if (
+          status !== OrderStatus.PickedUp &&
+          status !== OrderStatus.Delivered
+        ) {
+          throw 'Cant edit status';
+        }
+      }
+
+      await this.orders.save({
+        id,
+        status,
+      });
+
+      return {
+        ok: true,
       };
     } catch (e) {
       return {

@@ -7,6 +7,7 @@ import { AuthUser } from '../auth/auth-user.decorator';
 import { User } from '../users/entities/user.entity';
 import { ViewOrderInput, ViewOrderOutput } from './dtos/view-order.dto';
 import { ViewOrdersInput, ViewOrdersOutput } from './dtos/view-orders.dto';
+import { EditOrderInput, EditOrderOutput } from './dtos/edit-order.dto';
 
 @Resolver(() => Order)
 export class OrderResolver {
@@ -24,9 +25,10 @@ export class OrderResolver {
   @Role(['Any'])
   @Query(() => ViewOrderOutput)
   async viewOrder(
-    @Args('input') viewOrderInput: ViewOrderInput
+    @Args('input') viewOrderInput: ViewOrderInput,
+    @AuthUser() user: User
   ): Promise<ViewOrderOutput> {
-    return this.orderService.viewOrder(viewOrderInput);
+    return this.orderService.viewOrder(viewOrderInput, user);
   }
 
   @Role(['Any'])
@@ -36,5 +38,14 @@ export class OrderResolver {
     @AuthUser() user: User
   ): Promise<ViewOrdersOutput> {
     return this.orderService.viewOrders(viewOrdersInput, user);
+  }
+
+  @Role(['Owner', 'Delivery'])
+  @Mutation(() => EditOrderOutput)
+  async editOrder(
+    @Args('input') editOrderInput: EditOrderInput,
+    @AuthUser() user: User
+  ): Promise<EditOrderOutput> {
+    return this.orderService.editOrder(editOrderInput, user);
   }
 }
