@@ -5,7 +5,7 @@ import {
   RequestMethod,
 } from '@nestjs/common';
 import { GraphQLModule } from '@nestjs/graphql';
-import { ApolloDriver } from '@nestjs/apollo';
+import {ApolloDriver, ApolloDriverConfig} from '@nestjs/apollo';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import * as Joi from 'joi';
@@ -48,10 +48,24 @@ import { OrderItem } from './orders/entites/order-item.entity';
         MAIL_GUN_FROM_EMAIL: Joi.string().required(),
       }),
     }),
-    GraphQLModule.forRoot({
+    GraphQLModule.forRoot<ApolloDriverConfig>({
+      /*
+        Graphql subscription 을 설정하는 방법
+        Apollo Server v2, v3 : installSubscriptionHandlers: true,
+        Apollo Server v4 : subscriptions: { 'graphql-ws': true, },
+
+        현재 의존성은 apollo-server-express 로 설정되어 있는데 이는 Apollo Server v3를 지원하도록 되어 있으며
+        npm 사이트에서는 2024-10-22에 폐기된다고 설명하고 있음
+
+        나중에 Apollo Server v4 를 지원하도록 설정 및 의존성 버전업을 할 필요가 있다
+       */
       driver: ApolloDriver,
       autoSchemaFile: true,
-      context: ({ req }) => ({ user: req['user'] }),
+      installSubscriptionHandlers: true,
+      context: ({ req }) => {
+        console.log('test : ', req);
+        return { user: req['user'] };
+      },
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',

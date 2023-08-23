@@ -1,4 +1,4 @@
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Args, Mutation, Query, Resolver, Subscription } from '@nestjs/graphql';
 import { Order } from './entites/order.entity';
 import { OrderService } from './order.service';
 import { CreateOrderInput, CreateOrderOutput } from './dtos/create-order.dto';
@@ -8,6 +8,9 @@ import { User } from '../users/entities/user.entity';
 import { ViewOrderInput, ViewOrderOutput } from './dtos/view-order.dto';
 import { ViewOrdersInput, ViewOrdersOutput } from './dtos/view-orders.dto';
 import { EditOrderInput, EditOrderOutput } from './dtos/edit-order.dto';
+import { PubSub } from 'graphql-subscriptions';
+
+const pubSub = new PubSub();
 
 @Resolver(() => Order)
 export class OrderResolver {
@@ -47,5 +50,17 @@ export class OrderResolver {
     @AuthUser() user: User
   ): Promise<EditOrderOutput> {
     return this.orderService.editOrder(editOrderInput, user);
+  }
+
+  @Subscription(() => String)
+  eventAAABBB() {
+    console.log('testEvent called');
+    return pubSub.asyncIterator('testEvent');
+  }
+
+  @Mutation(() => String)
+  async fireEvent() {
+    await pubSub.publish('testEvent', { eventAAABBB: '333' });
+    return '333';
   }
 }
