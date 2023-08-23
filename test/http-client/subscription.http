@@ -1,0 +1,37 @@
+### subscription 실행
+GRAPHQL {{host}}/graphql
+
+subscription {
+  testEvent
+}
+
+> {%
+  client.test("response check", function() {
+    client.assert(response.status === 200, "Response status is not 200");
+  });
+
+  client.test("return value check", function() {
+    client.assert(response.body.data.createAccount.ok === true, "ok is not true");
+  });
+%}
+
+### subscription 외부 호출
+GRAPHQL {{host}}/graphql
+x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywiaWF0IjoxNjkyNzU1Mjc1fQ.HyMuNqI6NFzMmSK_sLO5_n55gE7d2JdtotZnJfCLJKI
+
+mutation {
+  fireEvent
+}
+
+> {%
+  client.test("response check", function() {
+    client.assert(response.status === 200, "Response status is not 200");
+  });
+
+  client.test("return value check", function() {
+    client.assert(response.body.data.createAccount.ok === true, "ok is not true");
+  });
+%}
+
+
+
