@@ -53,13 +53,15 @@ export class OrderResolver {
   }
 
   @Subscription(() => String)
+  @Role(['Any'])
   eventAAABBB() {
     console.log('testEvent called');
     return pubSub.asyncIterator('testEvent');
   }
 
   @Mutation(() => String)
-  async fireEvent() {
+  @Role(['Any'])
+  async fireEvent(@AuthUser() user: User) {
     await pubSub.publish('testEvent', { eventAAABBB: '333' });
     return '333';
   }
