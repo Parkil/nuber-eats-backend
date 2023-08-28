@@ -19,6 +19,7 @@ import { Dish } from './dish/entities/dish.entity';
 import { OrdersModule } from './orders/orders.module';
 import { Order } from './orders/entites/order.entity';
 import { OrderItem } from './orders/entites/order-item.entity';
+import { CommonModule } from './common/common.module';
 
 @Module({
   imports: [
@@ -56,6 +57,20 @@ import { OrderItem } from './orders/entites/order-item.entity';
       driver: ApolloDriver,
       autoSchemaFile: true,
       installSubscriptionHandlers: true,
+      // graphql subscription 실행시 header 정보를 넘기기 위한 설정 v4에서는 설정이 변경될 수 있음
+      subscriptions: {
+        'subscriptions-transport-ws': {
+          onConnect: (connectionParams) => {
+            return connectionParams;
+          },
+        },
+      },
+      context: ({ req, connection }) => {
+        const TOKEN_KEY = 'x-jwt';
+        return {
+          token: req ? req.headers[TOKEN_KEY] : connection.context[TOKEN_KEY],
+        };
+      },
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',
@@ -90,6 +105,7 @@ import { OrderItem } from './orders/entites/order-item.entity';
     }),
     DishModule,
     OrdersModule,
+    CommonModule,
   ],
   controllers: [],
   providers: [],

@@ -9,12 +9,15 @@ import { ViewOrderInput, ViewOrderOutput } from './dtos/view-order.dto';
 import { ViewOrdersInput, ViewOrdersOutput } from './dtos/view-orders.dto';
 import { EditOrderInput, EditOrderOutput } from './dtos/edit-order.dto';
 import { PubSub } from 'graphql-subscriptions';
-
-const pubSub = new PubSub();
+import { Inject } from '@nestjs/common';
+import { PUB_SUB } from '../common/common.constants';
 
 @Resolver(() => Order)
 export class OrderResolver {
-  constructor(private readonly orderService: OrderService) {}
+  constructor(
+    private readonly orderService: OrderService,
+    @Inject(PUB_SUB) private readonly pubSub: PubSub
+  ) {}
 
   @Role(['Client'])
   @Mutation(() => CreateOrderOutput)
@@ -52,17 +55,36 @@ export class OrderResolver {
     return this.orderService.editOrder(editOrderInput, user);
   }
 
-  @Subscription(() => String)
-  @Role(['Any'])
-  eventAAABBB() {
-    console.log('testEvent called');
-    return pubSub.asyncIterator('testEvent');
-  }
-
   @Mutation(() => String)
   @Role(['Any'])
-  async fireEvent(@AuthUser() user: User) {
-    await pubSub.publish('testEvent', { eventAAABBB: '333' });
+  async fireEvent(@Args('id') id: number) {
+    await this.pubSub.publish('testEvent', {
+      subscribeEvent: id,
+    });
     return '333';
+  }
+
+  @Subscription(() => String, {
+    filter: ({ subscribeEvent }, { id }) => {
+      /*
+      { subscribeEvent: 8 } { id: 1 } {
+        'x-jwt': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjkyNjU2OTI3fQ.4aDdZYso1QHsfeOtafLaHuqNWpFsNF38mJz7Y-cgUo0',
+        user: User {
+          id: 1,
+          createdAt: 2023-08-16T05:58:49.561Z,
+          updatedAt: 2023-08-16T05:58:49.561Z,
+          email: 'owner1@gmail.com',
+          role: 'Owner',
+          emailVerified: false
+        }
+      }
+      */
+      return subscribeEvent === id;
+    },
+  })
+  @Role(['Any'])
+  subscribeEvent(@Args('id') id: number) {
+    console.log('subscribeEvent called');
+    return this.pubSub.asyncIterator('testEvent');
   }
 }

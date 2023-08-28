@@ -41,13 +41,9 @@ export class AuthGuard implements CanActivate {
   }
 
   async findJwtUser({ gqlContext }: { gqlContext: any }) {
-    const jwtHeaderIndex = gqlContext.req.rawHeaders.indexOf('x-jwt');
-    if (jwtHeaderIndex == -1) {
-      return undefined;
-    }
+    const jwtToken = this.getJwtToken({ gqlContext: gqlContext });
 
     try {
-      const jwtToken = gqlContext.req.rawHeaders[jwtHeaderIndex + 1];
       const decoded = this.jwtService.verify(jwtToken);
 
       if (typeof decoded === 'object' && decoded.hasOwnProperty('id')) {
@@ -56,6 +52,19 @@ export class AuthGuard implements CanActivate {
       }
     } catch (e) {
       throw new Error(e);
+    }
+  }
+
+  getJwtToken({ gqlContext }: { gqlContext: any }): string {
+    if (gqlContext['x-jwt']) {
+      return gqlContext['x-jwt'];
+    } else {
+      const jwtHeaderIndex = gqlContext.req.rawHeaders.indexOf('x-jwt');
+      if (jwtHeaderIndex == -1) {
+        return undefined;
+      }
+
+      return gqlContext.req.rawHeaders[jwtHeaderIndex + 1];
     }
   }
 }
