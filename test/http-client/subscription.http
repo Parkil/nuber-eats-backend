@@ -3,7 +3,7 @@ GRAPHQL {{host}}/graphql
 x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjkzMDE3MjUyfQ.1DBcHOkaFz680FZ6p_WHbA1SJUYUcz0-qkm-KaGYWLg
 
 subscription {
-  eventAAABBB
+  subscribeEvent(id:1)
 }
 
 > {%
@@ -21,7 +21,7 @@ GRAPHQL {{host}}/graphql
 x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjkzMDE3MjUyfQ.1DBcHOkaFz680FZ6p_WHbA1SJUYUcz0-qkm-KaGYWLg
 
 mutation {
-  fireEvent
+  fireEvent(id: 1)
 }
 
 > {%
