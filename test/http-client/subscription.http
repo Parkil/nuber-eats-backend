@@ -3,7 +3,18 @@ GRAPHQL {{host}}/graphql
 x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjkzMDE3MjUyfQ.1DBcHOkaFz680FZ6p_WHbA1SJUYUcz0-qkm-KaGYWLg
 
 subscription {
-  subscribeEvent(id:1)
+  pendingOrders{
+    id
+    items {
+      dish {
+        name
+      }
+      options {
+        name
+        choice
+      }
+    }
+  }
 }
 
 > {%
@@ -21,7 +32,7 @@ GRAPHQL {{host}}/graphql
 x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjkzMDE3MjUyfQ.1DBcHOkaFz680FZ6p_WHbA1SJUYUcz0-qkm-KaGYWLg
 
 mutation {
-  fireEvent(id: 1)
+  fireEvent(id: 3)
 }
 
 > {%
