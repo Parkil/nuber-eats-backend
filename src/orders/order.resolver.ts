@@ -10,7 +10,13 @@ import { ViewOrdersInput, ViewOrdersOutput } from './dtos/view-orders.dto';
 import { EditOrderInput, EditOrderOutput } from './dtos/edit-order.dto';
 import { PubSub } from 'graphql-subscriptions';
 import { Inject } from '@nestjs/common';
-import { NEW_PENDING_ORDER, PUB_SUB } from '../common/common.constants';
+import {
+  NEW_COOKED_ORDER,
+  NEW_PENDING_ORDER,
+  PUB_SUB,
+  NEW_ORDER_UPDATE,
+} from '../common/common.constants';
+import { OrderUpdatesInput } from './dtos/order-updates.dto';
 
 @Resolver(() => Order)
 export class OrderResolver {
@@ -56,14 +62,39 @@ export class OrderResolver {
   }
 
   @Subscription(() => Order, {
-    filter: (payload, _, context) => {
-      console.log('payload : ', payload);
-      console.log('context : ', context);
-      return true;
+    // filter : subscription 이 작동하는 기준
+    filter: ({ pendingOrders: { ownerId } }, _, { user }) => {
+      return ownerId === user.id;
+    },
+    // resolver : subscription 을 호출하는 쪽에서 보낸 데이터를 정제해서 표시
+    resolve: ({ pendingOrders: { newOrder } }) => {
+      return newOrder;
     },
   })
   @Role(['Owner'])
   pendingOrders() {
     return this.pubSub.asyncIterator(NEW_PENDING_ORDER);
+  }
+
+  @Subscription(() => Order, {
+    filter: (payload, _, user) => {
+      console.log('payload : ', payload);
+      console.log('user : ', user);
+      //return ownerId === user.id;
+      return true;
+    },
+    resolve: ({ cookedOrders }) => {
+      return cookedOrders;
+    },
+  })
+  @Role(['Delivery'])
+  cookedOrders() {
+    return this.pubSub.asyncIterator(NEW_COOKED_ORDER);
+  }
+
+  @Subscription(() => Order)
+  @Role(['Any'])
+  orderUpdates(@Args('input') orderUpdatesInput: OrderUpdatesInput) {
+    return this.pubSub.asyncIterator(NEW_ORDER_UPDATE);
   }
 }

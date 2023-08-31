@@ -1,4 +1,4 @@
-### subscription 실행
+### pending Order Subscirption
 GRAPHQL {{host}}/graphql
 x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjkzMDE3MjUyfQ.1DBcHOkaFz680FZ6p_WHbA1SJUYUcz0-qkm-KaGYWLg
 
@@ -13,6 +13,32 @@ subscription {
         name
         choice
       }
+    }
+  }
+}
+
+> {%
+  client.test("response check", function() {
+    client.assert(response.status === 200, "Response status is not 200");
+  });
+
+  client.test("return value check", function() {
+    client.assert(response.body.data.createAccount.ok === true, "ok is not true");
+  });
+%}
+
+### cooked Order Subscirption
+GRAPHQL {{host}}/graphql
+x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjkzMDE3MjUyfQ.1DBcHOkaFz680FZ6p_WHbA1SJUYUcz0-qkm-KaGYWLg
+
+subscription {
+  cookedOrders {
+    restaurant {
+      name
+    }
+    total
+    customer {
+     email
     }
   }
 }

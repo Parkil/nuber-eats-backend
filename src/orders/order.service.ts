@@ -10,7 +10,12 @@ import { Dish } from '../dish/entities/dish.entity';
 import { ViewOrderInput, ViewOrderOutput } from './dtos/view-order.dto';
 import { ViewOrdersInput, ViewOrdersOutput } from './dtos/view-orders.dto';
 import { EditOrderInput, EditOrderOutput } from './dtos/edit-order.dto';
-import { NEW_PENDING_ORDER, PUB_SUB } from '../common/common.constants';
+import {
+  NEW_COOKED_ORDER,
+  NEW_ORDER_UPDATE,
+  NEW_PENDING_ORDER,
+  PUB_SUB,
+} from '../common/common.constants';
 import { PubSub } from 'graphql-subscriptions';
 
 @Injectable()
@@ -91,7 +96,9 @@ export class OrderService {
         })
       );
 
-      await this.pubSub.publish(NEW_PENDING_ORDER, { pendingOrders: newOrder });
+      await this.pubSub.publish(NEW_PENDING_ORDER, {
+        pendingOrders: { newOrder, ownerId: restaurant.ownerId },
+      });
 
       return {
         ok: true,
@@ -197,7 +204,7 @@ export class OrderService {
   ): Promise<EditOrderOutput> {
     try {
       const order = await this.orders.findOne({
-        relations: ['items', 'restaurant'],
+        relations: ['restaurant'],
         where: { id: id },
       });
 
@@ -231,6 +238,17 @@ export class OrderService {
       await this.orders.save({
         id,
         status,
+      });
+
+      const newOrder = { ...order, status };
+      if (user.role === UserRole.Owner && status === OrderStatus.Cooked) {
+        await this.pubSub.publish(NEW_COOKED_ORDER, {
+          cookedOrders: newOrder,
+        });
+      }
+
+      await this.pubSub.publish(NEW_ORDER_UPDATE, {
+        orderUpdates: newOrder,
       });
 
       return {
