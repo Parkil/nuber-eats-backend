@@ -17,6 +17,7 @@ import {
   NEW_ORDER_UPDATE,
 } from '../common/common.constants';
 import { OrderUpdatesInput } from './dtos/order-updates.dto';
+import { TakeOrderInput, TakeOrderOutput } from './dtos/take-order.dto';
 
 @Resolver(() => Order)
 export class OrderResolver {
@@ -92,9 +93,42 @@ export class OrderResolver {
     return this.pubSub.asyncIterator(NEW_COOKED_ORDER);
   }
 
-  @Subscription(() => Order)
+  @Subscription(() => Order, {
+    filter: (
+      { orderUpdates: order }: { orderUpdates: Order },
+      { input }: { input: OrderUpdatesInput },
+      { user }: { user: User }
+    ) => {
+      console.log('payload : ', order);
+      console.log('user : ', user);
+      console.log('variables : ', input);
+      // orderUpdates : publish method 에서 실어보낸 데이터
+      // user : auth guard 에서 가져온 사용자 정보
+      // input : Subscription 에서 사용한 파라메터
+
+      if (
+        order.driverId !== user.id &&
+        order.customerId !== user.id &&
+        order.restaurant.ownerId !== user.id
+      ) {
+        return false;
+      }
+
+      return order.id === input.id;
+    },
+  })
   @Role(['Any'])
   orderUpdates(@Args('input') orderUpdatesInput: OrderUpdatesInput) {
+    // filter 에서 조건을 거는 방법도 있지만 pubSub.asyncIterator 자체를 반환하지 못하게 하는 방법도 있다
     return this.pubSub.asyncIterator(NEW_ORDER_UPDATE);
+  }
+
+  @Role(['Delivery'])
+  @Mutation(() => TakeOrderOutput)
+  async takeOrder(
+    @Args('input') takeOrderInput: TakeOrderInput,
+    @AuthUser() driver: User
+  ): Promise<TakeOrderOutput> {
+    return this.orderService.takeOrder(takeOrderInput, driver);
   }
 }

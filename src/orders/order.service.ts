@@ -17,6 +17,7 @@ import {
   PUB_SUB,
 } from '../common/common.constants';
 import { PubSub } from 'graphql-subscriptions';
+import { TakeOrderInput, TakeOrderOutput } from './dtos/take-order.dto';
 
 @Injectable()
 export class OrderService {
@@ -249,6 +250,46 @@ export class OrderService {
 
       await this.pubSub.publish(NEW_ORDER_UPDATE, {
         orderUpdates: newOrder,
+      });
+
+      return {
+        ok: true,
+      };
+    } catch (e) {
+      return {
+        ok: false,
+        error: e,
+      };
+    }
+  }
+
+  async takeOrder(
+    { id: orderId }: TakeOrderInput,
+    driver: User
+  ): Promise<TakeOrderOutput> {
+    try {
+      const order = await this.orders.findOne({
+        relations: ['restaurant'],
+        where: { id: orderId },
+      });
+
+      if (!order) {
+        throw 'Order Info Not Found';
+      }
+
+      if (order.driver) {
+        throw 'This Order already has a driver';
+      }
+
+      await this.orders.save([
+        {
+          id: orderId,
+          driver: driver,
+        },
+      ]);
+
+      await this.pubSub.publish(NEW_ORDER_UPDATE, {
+        orderUpdates: { ...order, driver },
       });
 
       return {
