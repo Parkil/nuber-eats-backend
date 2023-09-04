@@ -97,12 +97,12 @@ query {
 
 ### 주문 수정
 GRAPHQL {{host}}/graphql
-x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjkyNjU2OTI3fQ.4aDdZYso1QHsfeOtafLaHuqNWpFsNF38mJz7Y-cgUo0
+x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NSwiaWF0IjoxNjkzNzg1ODMyfQ.GRCsvuwlBMMRV6bXOB6zBIrqIbn2lHsqjsdFdgNs_x0
 
 mutation {
   editOrder(input:{
     id: 6
-    status: Cooked
+    status: Delivered
   }){
     ok
     error
@@ -116,5 +116,28 @@ mutation {
 
   client.test("return value check", function() {
     client.assert(response.body.data.editOrder.ok === true, "ok is not true");
+  });
+%}
+
+### 배달원 주문 수락
+GRAPHQL {{host}}/graphql
+x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NSwiaWF0IjoxNjkzNzg1Mzk0fQ.o57pgDAqAw6bZY0EWIQx4Eo8--beJUTXC0ulgRt-NuY
+
+mutation {
+  takeOrder(input:{
+    id: 6
+  }){
+    ok
+    error
+  }
+}
+
+> {%
+  client.test("response check", function() {
+    client.assert(response.status === 200, "Response status is not 200");
+  });
+
+  client.test("return value check", function() {
+    client.assert(response.body.data.takeOrder.ok === true, "ok is not true");
   });
 %}
