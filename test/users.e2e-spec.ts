@@ -42,6 +42,7 @@ describe('UserModule (e2e)', () => {
     // 모든 테스트가 종료되면 DB 초기화
     const dataSource = app.get(DataSource);
     await dataSource.synchronize(true);
+    await app.close();
   });
 
   describe('createAccount', () => {
