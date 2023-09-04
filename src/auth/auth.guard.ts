@@ -59,7 +59,13 @@ export class AuthGuard implements CanActivate {
     if (gqlContext['x-jwt']) {
       return gqlContext['x-jwt'];
     } else {
-      const jwtHeaderIndex = gqlContext.req.rawHeaders.indexOf('x-jwt');
+      const req = gqlContext.req;
+
+      if (!req) {
+        return undefined;
+      }
+
+      const jwtHeaderIndex = req.rawHeaders.indexOf('x-jwt');
       if (jwtHeaderIndex == -1) {
         return undefined;
       }
