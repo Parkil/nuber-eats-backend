@@ -1,0 +1,23 @@
+### 결제 정보 생성
+GRAPHQL {{host}}/graphql
+x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjkzODgzMjYzfQ.apJURGCIVnzdhFp5dRO5_IhwQ7fAOrDpreGnO1bp91w
+
+mutation {
+  createPayments(input:{
+    transactionId: "111222333"
+    restaurantId: 1
+  }){
+    ok
+    error
+  }
+}
+
+> {%
+  client.test("response check", function() {
+    client.assert(response.status === 200, "Response status is not 200");
+  });
+
+  client.test("return value check", function() {
+    client.assert(response.body['data']['createPayments']['ok'] === true, "ok is not true");
+  });
+%}
