@@ -11,6 +11,7 @@ import * as bcrypt from 'bcrypt';
 import { InternalServerErrorException } from '@nestjs/common';
 import { Restaurant } from '../../restaurnats/entities/restaurant.entity';
 import { Order } from '../../orders/entites/order.entity';
+import { Payment } from '../../payments/entities/payment.entity';
 
 export enum UserRole {
   Client = 'Client',
@@ -62,6 +63,10 @@ export class User extends CoreEntity {
   @Field(() => [Order])
   @OneToMany(() => Order, (order) => order.driver)
   rides: Order[];
+
+  @Field(() => [Payment])
+  @OneToMany(() => Payment, (payment) => payment.user)
+  payments: Payment[];
 
   // BeforeInsert, BeforeUpdate 는 entity 를 이용한 insert, update 에서만 동작한다
   @BeforeInsert()
