@@ -23,7 +23,7 @@ import {
   SearchRestaurantsInput,
   SearchRestaurantsOutput,
 } from './dtos/search-restaurants.dto';
-import { ILike, Like } from 'typeorm';
+import { ILike } from 'typeorm';
 
 @Injectable()
 export class RestaurantService {
