@@ -235,6 +235,9 @@ export class RestaurantService {
         where: { category: { id: category.id } },
         take: restaurantCntPerPage, // 페이지당 보여지는 개수
         skip: (page - 1) * restaurantCntPerPage, // 시작점
+        order: {
+          isPromoted: 'DESC',
+        },
       });
 
       const totalPages = Math.ceil(

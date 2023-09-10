@@ -17,6 +17,9 @@ export class RestaurantRepository extends Repository<Restaurant> {
       where: _where,
       take: articlePerPage, // 페이지당 보여지는 개수
       skip: (page - 1) * articlePerPage, // 시작점
+      order: {
+        isPromoted: 'DESC',
+      },
     });
   }
 

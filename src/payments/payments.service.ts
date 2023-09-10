@@ -9,13 +9,15 @@ import {
 import { User } from '../users/entities/user.entity';
 import { Restaurant } from '../restaurnats/entities/restaurant.entity';
 import { GetPaymentsOutput } from './dtos/get-payments.dto';
+import { Cron, Interval, SchedulerRegistry } from '@nestjs/schedule';
 
 @Injectable()
 export class PaymentsService {
   constructor(
     @InjectRepository(Payment) private readonly payments: Repository<Payment>,
     @InjectRepository(Restaurant)
-    private readonly restaurants: Repository<Restaurant>
+    private readonly restaurants: Repository<Restaurant>,
+    private readonly schedulerRegistry: SchedulerRegistry
   ) {}
 
   async createPayments(
@@ -34,6 +36,15 @@ export class PaymentsService {
       if (restaurant.ownerId !== owner.id) {
         throw 'This restaurant belong to you';
       }
+
+      restaurant.isPromoted = true;
+
+      const date = new Date();
+      date.setDate(date.getDate() + 7); // 현재일로부터 7일 후
+
+      restaurant.promotedUntil = date;
+
+      await this.restaurants.save(restaurant);
 
       await this.payments.save(
         this.payments.create({
