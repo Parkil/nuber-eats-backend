@@ -23,3 +23,32 @@ mutation {
     client.assert(response.body.data.createRestaurant.ok === true, "ok is not true");
   });
 %}
+
+### 전체 레스토랑 리스트
+GRAPHQL {{host}}/graphql
+x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjkyMTY1NTYxfQ.rXMao0wVpp0E7COCIvJiNp6F2wV2lczL5Lzy7Lqligs
+
+query {
+  allRestaurants(input:{
+    page: 1
+  }){
+    ok
+    error
+    results {
+      name
+      address
+      isPromoted
+      promotedUntil
+    }
+  }
+}
+
+> {%
+  client.test("response check", function() {
+    client.assert(response.status === 200, "Response status is not 200");
+  });
+
+  client.test("return value check", function() {
+    client.assert(response.body.data.createRestaurant.ok === true, "ok is not true");
+  });
+%}
