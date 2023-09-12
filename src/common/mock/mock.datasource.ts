@@ -1,4 +1,4 @@
-import { DataSource } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 
 /*
   datasource.transaction 내부의 transactionalEntityManager mocking
@@ -25,3 +25,14 @@ export const dataSourceMockFactory: () => MockType<DataSource> = jest.fn(
 );
 
 export type MockType<T> = Partial<Record<keyof T, jest.Mock>>;
+
+export type MockRepository<T = any> = Partial<
+  Record<keyof Repository<T>, jest.Mock>
+>;
+
+export const mockRepository = () => ({
+  findOne: jest.fn(),
+  findOneOrFail: jest.fn(),
+  save: jest.fn(),
+  create: jest.fn(),
+});
