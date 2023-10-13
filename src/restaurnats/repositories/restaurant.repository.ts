@@ -14,6 +14,7 @@ export class RestaurantRepository extends Repository<Restaurant> {
     articlePerPage: number
   ): Promise<[Restaurant[], number]> {
     return await this.findAndCount({
+      relations: ['category'],
       where: _where,
       take: articlePerPage, // 페이지당 보여지는 개수
       skip: (page - 1) * articlePerPage, // 시작점
