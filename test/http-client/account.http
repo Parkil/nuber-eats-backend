@@ -3,9 +3,9 @@ GRAPHQL {{host}}/graphql
 
 mutation {
   createAccount(input:{
-    email: "driver1@gmail.com"
+    email: "owner1@gmail.com"
     password: "aaa000"
-    role: Delivery
+    role: Owner
   }){
     ok
     error
@@ -27,7 +27,7 @@ GRAPHQL {{host}}/graphql
 
 mutation {
   login(input:{
-    email: "owner2@gmail.com"
+    email: "owner1@gmail.com"
     password: "aaa000"
   }){
     ok

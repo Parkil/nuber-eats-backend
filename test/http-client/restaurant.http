@@ -1,13 +1,13 @@
 ### 레스토랑 생성
 GRAPHQL {{host}}/graphql
-x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjkyMTY1NTYxfQ.rXMao0wVpp0E7COCIvJiNp6F2wV2lczL5Lzy7Lqligs
+x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiaWF0IjoxNjk3MzI3MDgzfQ.v9BqBp-de3S0psTbF3iHANDsA4siXJmJJzFgQ0GJIPQ
 
 mutation {
   createRestaurant(input:{
-    name: "주인1식당"
-    coverImg: "https://"
-    address: "주인1식당 - 주소"
-    categoryName: "카테고리1"
+    name: "버거 디스트릭트"
+    coverImg: "https://tb-static.uber.com/prod/image-proc/process%E2%80%A6019686d02cb/69ad85cd7b39888042b3bbf1c22d630d.webp"
+    address: "버거 디스트릭트 주소"
+    categoryName: "Comfort Food"
   }){
     ok
     error
@@ -26,7 +26,7 @@ mutation {
 
 ### 전체 레스토랑 리스트
 GRAPHQL {{host}}/graphql
-x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjkyMTY1NTYxfQ.rXMao0wVpp0E7COCIvJiNp6F2wV2lczL5Lzy7Lqligs
+x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiaWF0IjoxNjk3MzI3MDgzfQ.v9BqBp-de3S0psTbF3iHANDsA4siXJmJJzFgQ0GJIPQ
 
 query {
   allRestaurants(input:{
@@ -37,6 +37,9 @@ query {
     results {
       name
       address
+      category {
+        name
+      }
       isPromoted
       promotedUntil
     }
@@ -49,6 +52,39 @@ query {
   });
 
   client.test("return value check", function() {
-    client.assert(response.body.data.createRestaurant.ok === true, "ok is not true");
+    client.assert(response.body.data.allRestaurants.ok === true, "ok is not true");
+  });
+%}
+
+### 이름으로 레스토랑 검색
+GRAPHQL {{host}}/graphql
+x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiaWF0IjoxNjk3MzI3MDgzfQ.v9BqBp-de3S0psTbF3iHANDsA4siXJmJJzFgQ0GJIPQ
+
+query {
+  allRestaurants(input:{
+    page: 1
+    query: "맥"
+  }){
+    ok
+    error
+    results {
+      name
+      address
+      category {
+        name
+      }
+      isPromoted
+      promotedUntil
+    }
+  }
+}
+
+> {%
+  client.test("response check", function() {
+    client.assert(response.status === 200, "Response status is not 200");
+  });
+
+  client.test("return value check", function() {
+    client.assert(response.body.data.allRestaurants.ok === true, "ok is not true");
   });
 %}

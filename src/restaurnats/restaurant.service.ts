@@ -113,13 +113,17 @@ export class RestaurantService {
     }
   }
 
-  async allRestaurants({ page }: RestaurantsInput): Promise<RestaurantsOutput> {
+  async allRestaurants({
+    page,
+    query,
+  }: RestaurantsInput): Promise<RestaurantsOutput> {
     try {
-      const restaurantCntPerPage = 25;
+      const restaurantCntPerPage = 3;
+      const where = query ? { name: ILike(`%${query}%`) } : {};
 
       const [restaurants, totalCount] =
         await this.restaurants.findAndCountPagination(
-          {},
+          where,
           page,
           restaurantCntPerPage
         );
@@ -187,8 +191,8 @@ export class RestaurantService {
       return {
         ok: true,
         searchResult: restaurants,
-        totalItems: totalCount,
         totalPages: totalPages,
+        totalItems: totalCount,
       };
     } catch (e) {
       return {
