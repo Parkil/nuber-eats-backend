@@ -234,19 +234,17 @@ export class RestaurantService {
         };
       }
 
-      const restaurantCntPerPage = 25;
-      const restaurants = await this.restaurants.find({
-        where: { category: { id: category.id } },
-        take: restaurantCntPerPage, // 페이지당 보여지는 개수
-        skip: (page - 1) * restaurantCntPerPage, // 시작점
-        order: {
-          isPromoted: 'DESC',
-        },
-      });
+      const restaurantCntPerPage = 3;
+      const where = { category: { id: category.id } };
 
-      const totalPages = Math.ceil(
-        (await this.restaurantCount(category)) / restaurantCntPerPage
-      );
+      const [restaurants, totalCount] =
+        await this.restaurants.findAndCountPagination(
+          where,
+          page,
+          restaurantCntPerPage
+        );
+
+      const totalPages = Math.ceil(totalCount / restaurantCntPerPage);
 
       return {
         ok: true,
