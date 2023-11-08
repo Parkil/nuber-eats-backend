@@ -95,6 +95,18 @@ export class RestaurantsResolver {
       searchRestaurantsInput
     );
   }
+
+  @Role(['Owner'])
+  @Query(() => SearchRestaurantsOutput)
+  async findRestaurantsByOwner(
+    @Args('input') searchRestaurantsInput: SearchRestaurantsInput,
+    @AuthUser() authUser: User
+  ): Promise<SearchRestaurantsOutput> {
+    return await this.restaurantService.findRestaurantsByOwner(
+      authUser,
+      searchRestaurantsInput
+    );
+  }
 }
 
 @Resolver(() => Category)

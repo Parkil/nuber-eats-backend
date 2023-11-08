@@ -88,3 +88,36 @@ query {
     client.assert(response.body.data.allRestaurants.ok === true, "ok is not true");
   });
 %}
+
+### 해당 Owner의 레스토랑 검색 (이름 검색 포함)
+GRAPHQL {{host}}/graphql
+x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiaWF0IjoxNjk5NDQyMTIyfQ.Qc5pB9O_pjZlRCkiWOq9jamRcWYMsMS3qRbyBOmX1tk
+
+query {
+  findRestaurantsByOwner(input:{
+    page: 1
+    query: "노"
+  }){
+    ok
+    error
+    searchResult {
+      name
+      address
+      category {
+        name
+      }
+      isPromoted
+      promotedUntil
+    }
+  }
+}
+
+> {%
+  client.test("response check", function() {
+    client.assert(response.status === 200, "Response status is not 200");
+  });
+
+  client.test("return value check", function() {
+    client.assert(response.body['data']['findRestaurantsByOwner']['ok'] === true, "ok is not true");
+  });
+%}

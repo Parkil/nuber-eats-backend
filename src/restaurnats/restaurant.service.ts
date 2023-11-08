@@ -177,11 +177,39 @@ export class RestaurantService {
     query,
   }: SearchRestaurantsInput): Promise<SearchRestaurantsOutput> {
     try {
-      // todo  대소문자 검색이 되도록 변경 필요 내 생각에는 ilike
       const restaurantCntPerPage = 3;
       const [restaurants, totalCount] =
         await this.restaurants.findAndCountPagination(
           { name: ILike(`%${query}%`) }, // ILike - 대소문자 상관없이 검색
+          page,
+          restaurantCntPerPage
+        );
+
+      const totalPages = Math.ceil(totalCount / restaurantCntPerPage);
+
+      return {
+        ok: true,
+        searchResult: restaurants,
+        totalPages: totalPages,
+        totalItems: totalCount,
+      };
+    } catch (e) {
+      return {
+        ok: false,
+        error: e,
+      };
+    }
+  }
+
+  async findRestaurantsByOwner(
+    authUser: User,
+    { page, query }: SearchRestaurantsInput
+  ): Promise<SearchRestaurantsOutput> {
+    try {
+      const restaurantCntPerPage = 3;
+      const [restaurants, totalCount] =
+        await this.restaurants.findAndCountPagination(
+          { name: ILike(`%${query}%`), owner: { id: authUser.id } },
           page,
           restaurantCntPerPage
         );
