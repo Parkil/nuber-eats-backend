@@ -116,28 +116,30 @@ export class UsersService {
         });
 
         if (email) {
-          const chkUser = await entityManager.findOne(User, {
-            where: { email: email },
-          });
+          // 파라메터로 들어온 이메일과 원래 이메일이 다를경우 이메일 중복여부 체크
+          if (email !== user.email) {
+            const chkUser = await entityManager.findOne(User, {
+              where: { email: email },
+            });
 
-          if (chkUser) {
-            throw 'duplicate email';
+            if (chkUser) {
+              throw 'duplicate email';
+            }
+            user.email = email;
+            user.emailVerified = false;
+
+            const verification: Verification = await entityManager.save(
+              Verification,
+              this.verification.create({
+                user,
+              })
+            );
+
+            await this.emailService.sendVerificationEmail(
+              email,
+              verification.code
+            );
           }
-
-          user.email = email;
-          user.emailVerified = false;
-
-          const verification: Verification = await entityManager.save(
-            Verification,
-            this.verification.create({
-              user,
-            })
-          );
-
-          await this.emailService.sendVerificationEmail(
-            email,
-            verification.code
-          );
         }
 
         if (password) {
