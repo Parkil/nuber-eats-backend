@@ -1,0 +1,10 @@
+### 파일 업로드
+POST {{host}}/upload
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="dish.txt"
+Content-Type: text/plain
+
+< ./dish.txt
+--WebAppBoundary--
