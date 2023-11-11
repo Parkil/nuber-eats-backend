@@ -1,6 +1,6 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Restaurant } from '../entities/restaurant.entity';
-import { IsString } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 import {
   PaginationInput,
   PaginationOutput,
@@ -8,9 +8,10 @@ import {
 
 @InputType()
 export class SearchRestaurantsInput extends PaginationInput {
-  @Field(() => String)
+  @Field(() => String, { nullable: true })
+  @IsOptional()
   @IsString()
-  query: string;
+  query?: string;
 }
 
 @ObjectType()

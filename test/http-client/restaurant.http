@@ -96,10 +96,12 @@ x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiaWF0IjoxNjk5NDQyMTIyfQ.Q
 query {
   findRestaurantsByOwner(input:{
     page: 1
-    query: "노"
+    query: ""
   }){
     ok
     error
+    totalPages
+    totalItems
     searchResult {
       name
       address
