@@ -24,6 +24,8 @@ import { PaymentsModule } from './payments/payments.module';
 import { Payment } from './payments/entities/payment.entity';
 import { ScheduleModule } from '@nestjs/schedule';
 import { UploadsModule } from './uploads/uploads.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -114,6 +116,11 @@ import { UploadsModule } from './uploads/uploads.module';
     PaymentsModule,
     ScheduleModule.forRoot(),
     UploadsModule,
+    // 정적파일 설정
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'static'),
+      exclude: ['/graphql'],
+    }),
   ],
   controllers: [],
   providers: [],

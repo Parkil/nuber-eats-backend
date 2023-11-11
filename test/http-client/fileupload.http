@@ -3,8 +3,8 @@ POST {{host}}/upload
 Content-Type: multipart/form-data; boundary=WebAppBoundary
 
 --WebAppBoundary
-Content-Disposition: form-data; name="file"; filename="dish.txt"
-Content-Type: text/plain
+Content-Disposition: form-data; name="file"; filename="test.png"
+Content-Type: image/png
 
-< ./dish.txt
+< ./test.png
 --WebAppBoundary--
