@@ -21,6 +21,6 @@ export class UploadController {
     )
     file: Express.Multer.File
   ) {
-    console.log('file : ', file);
+    return { url: `http://localhost:4000/${file.originalname}` };
   }
 }
