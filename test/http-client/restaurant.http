@@ -123,3 +123,36 @@ query {
     client.assert(response.body['data']['findRestaurantsByOwner']['ok'] === true, "ok is not true");
   });
 %}
+
+
+### 해당 Owner의 레스토랑 검색 (이름 검색 포함)
+GRAPHQL {{host}}/graphql
+x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiaWF0IjoxNjk5NDQyMTIyfQ.Qc5pB9O_pjZlRCkiWOq9jamRcWYMsMS3qRbyBOmX1tk
+
+query {
+  ownerRestaurant(input:{
+    id: 99999
+  }){
+    ok
+    error
+    restaurant {
+      name
+      address
+      category {
+        name
+      }
+      isPromoted
+      promotedUntil
+    }
+  }
+}
+
+> {%
+  client.test("response check", function() {
+    client.assert(response.status === 200, "Response status is not 200");
+  });
+
+  client.test("return value check", function() {
+    client.assert(response.body['data']['ownerRestaurant']['ok'] === true, "ok is not true");
+  });
+%}

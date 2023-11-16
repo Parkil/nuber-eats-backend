@@ -32,6 +32,7 @@ import {
   SearchRestaurantsInput,
   SearchRestaurantsOutput,
 } from './dtos/search-restaurants.dto';
+import { OwnerRestaurantInput, OwnerRestaurantOutput } from './dtos/owner-restaurant-input';
 
 @Resolver(() => Restaurant)
 export class RestaurantsResolver {
@@ -69,6 +70,18 @@ export class RestaurantsResolver {
   ): Promise<DeleteRestaurantsOutput> {
     return await this.restaurantService.deleteRestaurant(
       deleteRestaurantsInput,
+      authUser
+    );
+  }
+
+  @Role(['Owner'])
+  @Query(() => OwnerRestaurantOutput)
+  async ownerRestaurant(
+    @Args('input') ownerRestaurantInput: OwnerRestaurantInput,
+    @AuthUser() authUser: User
+  ): Promise<OwnerRestaurantOutput> {
+    return await this.restaurantService.ownerRestaurant(
+      ownerRestaurantInput,
       authUser
     );
   }

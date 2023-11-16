@@ -4,18 +4,14 @@ import { CoreOutput } from '../../common/dtos/output.dto';
 import { IsString } from 'class-validator';
 
 @InputType()
-export class CreateRestaurantsInput extends PickType(
+export class OwnerRestaurantInput extends PickType(
   Restaurant,
-  ['name', 'coverImg', 'address'],
+  ['id'],
   InputType
-) {
-  @Field(() => String)
-  @IsString()
-  categoryName: string;
-}
+) {}
 
 @ObjectType()
-export class CreateRestaurantsOutput extends CoreOutput {
-  @Field(() => Number, { nullable: true })
-  restaurantId?: number;
+export class OwnerRestaurantOutput extends CoreOutput {
+  @Field(() => Restaurant, { nullable: true })
+  restaurant?: Restaurant;
 }

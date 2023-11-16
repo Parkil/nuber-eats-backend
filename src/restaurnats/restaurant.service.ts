@@ -24,6 +24,10 @@ import {
   SearchRestaurantsOutput,
 } from './dtos/search-restaurants.dto';
 import { ILike } from 'typeorm';
+import {
+  OwnerRestaurantInput,
+  OwnerRestaurantOutput,
+} from './dtos/owner-restaurant-input';
 
 @Injectable()
 export class RestaurantService {
@@ -44,10 +48,11 @@ export class RestaurantService {
         createRestaurantsInput.categoryName
       );
 
-      await this.restaurants.save(newRestaurant);
+      const result = await this.restaurants.save(newRestaurant);
 
       return {
         ok: true,
+        restaurantId: result.id,
       };
     } catch (e) {
       return {
@@ -144,6 +149,35 @@ export class RestaurantService {
     }
   }
 
+  async ownerRestaurant(
+    { id }: OwnerRestaurantInput,
+    owner: User
+  ): Promise<OwnerRestaurantOutput> {
+    try {
+      const restaurant = await this.restaurants.findOne({
+        where: { id: id, owner: { id: owner.id } },
+        relations: ['category'],
+      });
+
+      if (!restaurant) {
+        return {
+          ok: false,
+          error: 'Cannot find Restaurant',
+        };
+      }
+
+      return {
+        ok: true,
+        restaurant: restaurant,
+      };
+    } catch (e) {
+      return {
+        ok: false,
+        error: e,
+      };
+    }
+  }
+
   async findRestaurantById({
     restaurantId,
   }: RestaurantInput): Promise<RestaurantOutput> {
@@ -206,7 +240,7 @@ export class RestaurantService {
     { page, query }: SearchRestaurantsInput
   ): Promise<SearchRestaurantsOutput> {
     try {
-      const restaurantCntPerPage = 3;
+      const restaurantCntPerPage = 90;
       const [restaurants, totalCount] =
         await this.restaurants.findAndCountPagination(
           { name: ILike(`%${query}%`), owner: { id: authUser.id } },
