@@ -7,13 +7,9 @@ mutation {
     restaurantId: 1
     items:[
       {
-        dishId: 1,
-        options: [{name: "더 많이"}, {name: "맵기", choice:"보통"}]
+        dishId: 5,
+        options: [{name: "a1"}]
       },
-      {
-        dishId: 2,
-        options: [{name: "계란추가"}, {name: "맵기", choice:"보통"}, {name: "양", choice:"많이"}]
-      }
     ]
   }){
     ok
@@ -33,7 +29,7 @@ mutation {
 
 ### 주문 단건 조회
 GRAPHQL {{host}}/graphql
-x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjkyNjU2OTI3fQ.4aDdZYso1QHsfeOtafLaHuqNWpFsNF38mJz7Y-cgUo0
+x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiaWF0IjoxNzAwNTY2NDkwfQ.mkWB7Rk3RcF-lfmAf6SmCf0BNfUMiQCkjFIqwdwEgjs
 
 query {
   viewOrder(input:{
@@ -54,6 +50,7 @@ query {
       }
       total
       status
+      createdAt
     }
   }
 }

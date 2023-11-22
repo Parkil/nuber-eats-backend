@@ -131,7 +131,7 @@ x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiaWF0IjoxNjk5NDQyMTIyfQ.Q
 
 query {
   ownerRestaurant(input:{
-    id: 99999
+    id: 1
   }){
     ok
     error
@@ -140,6 +140,11 @@ query {
       address
       category {
         name
+      }
+      orders {
+        id
+        total
+        createdAt
       }
       isPromoted
       promotedUntil
