@@ -121,10 +121,27 @@ export class RestaurantService {
   async allRestaurants({
     page,
     query,
+    slug,
   }: RestaurantsInput): Promise<RestaurantsOutput> {
     try {
+      let categoryId: number;
+
+      if (slug) {
+        const category = await this.categories.findOne({
+          where: { slug: slug },
+        });
+
+        if (category) {
+          categoryId = category.id;
+        }
+      }
+      const nameLike = query ? ILike(`%${query}%`) : undefined;
+
       const restaurantCntPerPage = 3;
-      const where = query ? { name: ILike(`%${query}%`) } : {};
+      const where = {
+        ...(nameLike && { name: nameLike }),
+        ...(categoryId && { category: { id: categoryId } }),
+      };
 
       const [restaurants, totalCount] =
         await this.restaurants.findAndCountPagination(
@@ -140,6 +157,48 @@ export class RestaurantService {
         results: restaurants,
         totalPages: totalPages,
         totalItems: totalCount,
+      };
+    } catch (e) {
+      return {
+        ok: false,
+        error: e,
+      };
+    }
+  }
+
+  async findCategoryBySlug({
+    slug,
+    page,
+  }: CategoryInput): Promise<CategoryOutput> {
+    try {
+      const category = await this.categories.findOne({
+        where: { slug: slug },
+      });
+
+      if (!category) {
+        return {
+          ok: true,
+          error: 'Category Not Found',
+        };
+      }
+
+      const restaurantCntPerPage = 3;
+      const where = { category: { id: category.id } };
+
+      const [restaurants, totalCount] =
+        await this.restaurants.findAndCountPagination(
+          where,
+          page,
+          restaurantCntPerPage
+        );
+
+      const totalPages = Math.ceil(totalCount / restaurantCntPerPage);
+
+      return {
+        ok: true,
+        category: category,
+        restaurants: restaurants,
+        totalPages: totalPages,
       };
     } catch (e) {
       return {
@@ -271,48 +330,6 @@ export class RestaurantService {
       return {
         ok: true,
         categories: categories,
-      };
-    } catch (e) {
-      return {
-        ok: false,
-        error: e,
-      };
-    }
-  }
-
-  async findCategoryBySlug({
-    slug,
-    page,
-  }: CategoryInput): Promise<CategoryOutput> {
-    try {
-      const category = await this.categories.findOne({
-        where: { slug: slug },
-      });
-
-      if (!category) {
-        return {
-          ok: true,
-          error: 'Category Not Found',
-        };
-      }
-
-      const restaurantCntPerPage = 3;
-      const where = { category: { id: category.id } };
-
-      const [restaurants, totalCount] =
-        await this.restaurants.findAndCountPagination(
-          where,
-          page,
-          restaurantCntPerPage
-        );
-
-      const totalPages = Math.ceil(totalCount / restaurantCntPerPage);
-
-      return {
-        ok: true,
-        category: category,
-        restaurants: restaurants,
-        totalPages: totalPages,
       };
     } catch (e) {
       return {

@@ -12,6 +12,11 @@ export class RestaurantsInput extends PaginationInput {
   @IsOptional()
   @IsString()
   query?: string;
+
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  @IsString()
+  slug?: string;
 }
 
 @ObjectType()
