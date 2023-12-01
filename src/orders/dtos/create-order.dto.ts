@@ -2,6 +2,7 @@ import { CoreOutput } from '../../common/dtos/output.dto';
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { IsNumber, ValidateNested } from 'class-validator';
 import { OrderItemOption } from '../entites/order-item.entity';
+import { number } from 'joi';
 
 @InputType()
 class CreateOrderItemInput {
@@ -25,4 +26,7 @@ export class CreateOrderInput {
 }
 
 @ObjectType()
-export class CreateOrderOutput extends CoreOutput {}
+export class CreateOrderOutput extends CoreOutput {
+  @Field(() => Number, { nullable: true })
+  orderId?: number;
+}

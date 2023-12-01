@@ -103,6 +103,7 @@ export class OrderService {
 
       return {
         ok: true,
+        orderId: newOrder.id,
       };
     } catch (e) {
       return {
