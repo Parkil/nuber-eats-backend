@@ -33,6 +33,7 @@ export class AuthGuard implements CanActivate {
       return false;
     }
 
+    // Any - 로그인한 사람의 Role 전체
     if (roles.includes('Any')) {
       return true;
     }

@@ -26,10 +26,10 @@ export class DishService {
       /*
        이유는 정확히 모르겠으나 options 가 넘어올때 console.log 를 찍어보면 다음과
        같이 표시된다
-       [ name: 'Quntity', choices: [ '1', '2', '3' ], extra: 3 ]
+       [ name: 'Quantity', choices: [ '1', '2', '3' ], extra: 3 ]
         
        아래와 같이 표기가 되어야 json 으로 정상적으로 변환이 된다 
-       { name: 'Quntity', choices: [ '1', '2', '3' ], extra: 3 }
+       { name: 'Quantity', choices: [ '1', '2', '3' ], extra: 3 }
        
        왜 []로 묶이는지 아직 정확한 원인은 찾지 못하였으나, []로 묶이면 json 문자열로 
        변환이 이루어지지 않는 문제를 확인

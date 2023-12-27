@@ -2,7 +2,7 @@ import { DataSource, Repository } from 'typeorm';
 
 /*
   datasource.transaction 내부의 transactionalEntityManager mocking
-  특이한게 이것만 mocking 해도 transaction 내부의 로직이 mocking이 된다
+  특이한게 이것만 mocking 해도 transaction 내부의 로직이 mocking 이 된다
  */
 export const mockTransactionalEntityManager = {
   save: jest.fn(),

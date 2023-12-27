@@ -1,17 +1,16 @@
 ### Dish(레스토랑에서 파는 메뉴) 생성
 GRAPHQL {{host}}/graphql
-x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjkyMTY1NTYxfQ.rXMao0wVpp0E7COCIvJiNp6F2wV2lczL5Lzy7Lqligs
+x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiaWF0IjoxNzAwNzg3MDY4fQ.W7irOg8DHlI9bIljA3rUogfH2LgyjwCLsZY8T2pJuOg
 
 mutation {
   createDish(input:{
-    name:"메뉴 - 쫄면"
-    price:8
-    description:"두번째 메뉴"
+    name:"스파아시 버거"
+    price:10
+    description:"아주 매운맛!!"
     restaurantId:1
     options:[
-      {name:"계란추가", extra:1},
-      {name:"맵기", choices:[{name:"보통", extra:1}, {name:"더 맵게", extra:2}]},
-      {name:"양", choices:[{name:"많이", extra:1}, {name:"더 많이", extra:2}]}
+      {name:"덜 맵게", extra:0},
+      {name:"감자튀김 추가", extra:2},
     ]
   }){
     ok
@@ -25,7 +24,7 @@ mutation {
     });
 
     client.test("return value check", function () {
-        client.assert(response.body.data.createDish.ok === true, "ok is not true");
+        client.assert(response.body['data']['createDish']['ok'] === true, "ok is not true");
     });
 %}
 
