@@ -77,6 +77,12 @@ import { join } from 'path';
           token: req ? req.headers[TOKEN_KEY] : connection.context[TOKEN_KEY],
         };
       },
+      // formatError 는 처리되지 않은 예외 발생시 예외를 formatting 하는 기능을 담당
+      formatError: (error) => {
+        return {
+          message: error.message,
+        };
+      },
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',

@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource, FindOptionsWhere, Repository } from 'typeorm';
 import { Restaurant } from '../entities/restaurant.entity';
+import { VerifyOutput } from '../dtos/verify-owner.dto';
+import { errorMsg, successMsg } from '../../common/msg/msg.util';
 
 @Injectable()
 export class RestaurantRepository extends Repository<Restaurant> {
@@ -27,7 +29,7 @@ export class RestaurantRepository extends Repository<Restaurant> {
   async verifyOwner(
     restaurantId: number,
     ownerId: number
-  ): Promise<Restaurant> {
+  ): Promise<VerifyOutput> {
     const restaurant = await this.findOne({
       where: {
         id: restaurantId,
@@ -35,13 +37,13 @@ export class RestaurantRepository extends Repository<Restaurant> {
     });
 
     if (!restaurant) {
-      throw 'Restaurant not found';
+      return errorMsg('Restaurant not found');
     }
 
     if (ownerId !== restaurant.ownerId) {
-      throw 'This restaurant doesnt belong to you';
+      return errorMsg('This restaurant doesnt belong to you');
     }
 
-    return restaurant;
+    return successMsg({ restaurant: restaurant });
   }
 }

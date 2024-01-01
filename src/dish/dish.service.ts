@@ -7,11 +7,12 @@ import { User } from '../users/entities/user.entity';
 import { instanceArrToObjArr } from '../common/json/json.util';
 import { EditDishInput, EditDishOutput } from './dtos/edit-dish.input';
 import { DeleteDishInput, DeleteDishOutput } from './dtos/delete-dish.input';
+import { errorMsg, successMsg } from '../common/msg/msg.util';
 
 export class DishService {
   constructor(
     @InjectRepository(Dish) private readonly dishes: Repository<Dish>,
-    private readonly restaurants: RestaurantRepository
+    private readonly restaurantRepository: RestaurantRepository
   ) {}
 
   async createDish(
@@ -19,10 +20,17 @@ export class DishService {
     owner: User
   ): Promise<CreateDishOutput> {
     try {
-      const restaurant = await this.restaurants.verifyOwner(
+      const verifyOutput = await this.restaurantRepository.verifyOwner(
         restaurantId,
         owner.id
       );
+
+      if (!verifyOutput.ok) {
+        return verifyOutput;
+      }
+
+      const { restaurant } = verifyOutput;
+
       /*
        이유는 정확히 모르겠으나 options 가 넘어올때 console.log 를 찍어보면 다음과
        같이 표시된다
@@ -51,14 +59,9 @@ export class DishService {
         })
       );
 
-      return {
-        ok: true,
-      };
+      return successMsg();
     } catch (e) {
-      return {
-        ok: false,
-        error: e,
-      };
+      return errorMsg(e);
     }
   }
 
@@ -72,10 +75,10 @@ export class DishService {
       });
 
       if (!dish) {
-        throw 'Dish Not Found';
+        return errorMsg('Dish Not Found');
       }
 
-      await this.restaurants.verifyOwner(dish.restaurantId, owner.id);
+      await this.restaurantRepository.verifyOwner(dish.restaurantId, owner.id);
       const convertOptions = instanceArrToObjArr(createDishInput.options);
       await this.dishes.save([
         {
@@ -85,14 +88,9 @@ export class DishService {
         },
       ]);
 
-      return {
-        ok: true,
-      };
+      return successMsg();
     } catch (e) {
-      return {
-        ok: false,
-        error: e,
-      };
+      return errorMsg(e);
     }
   }
 
@@ -104,20 +102,15 @@ export class DishService {
       const dish = await this.dishes.findOne({ where: { id: dishId } });
 
       if (!dish) {
-        throw 'Dish Not Found';
+        return errorMsg('Dish Not Found');
       }
 
-      await this.restaurants.verifyOwner(dish.restaurantId, owner.id);
+      await this.restaurantRepository.verifyOwner(dish.restaurantId, owner.id);
       await this.dishes.delete(dishId);
 
-      return {
-        ok: true,
-      };
+      return successMsg();
     } catch (e) {
-      return {
-        ok: false,
-        error: e,
-      };
+      return errorMsg(e);
     }
   }
 }
