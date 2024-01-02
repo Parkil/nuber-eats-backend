@@ -95,15 +95,19 @@ export class DishService {
           return errorMsg('Dish Not Found');
         }
 
-        await this.restaurantRepository.verifyOwner(dish.restaurantId, owner.id);
+        const verifyOutput = await this.restaurantRepository.verifyOwner(dish.restaurantId, owner.id);
+        if (!verifyOutput.ok) {
+          return verifyOutput;
+        }
+
         const convertOptions = instanceArrToObjArr(createDishInput.options);
 
         // omitted - 해당 property 제외
         const {dishId: omitted, ...updateParam} = createDishInput;
 
         await entityManager.update(Dish, { id: createDishInput.dishId }, {
-            ...updateParam,
-            options: convertOptions,
+          ...updateParam,
+          options: convertOptions,
         });
 
         return successMsg();
