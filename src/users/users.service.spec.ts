@@ -9,8 +9,8 @@ import { DataSource, Repository } from 'typeorm';
 import {
   dataSourceMockFactory,
   mockTransactionalEntityManager,
-  MockType,
 } from '../common/mock/mock.datasource';
+import { MockType } from '../common/type/mock.type';
 
 // 나머지 서비스 Mocking 설정
 const mockRepository = () => ({
