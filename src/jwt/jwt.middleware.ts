@@ -3,6 +3,7 @@ import { NextFunction, Request, Response } from 'express';
 import { JwtService } from './jwt.service';
 import { UsersService } from '../users/users.service';
 
+// Jwt middleware 현재는 사용되지 않음
 @Injectable()
 export class JwtMiddleware implements NestMiddleware {
   constructor(
