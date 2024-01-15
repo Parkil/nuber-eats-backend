@@ -109,6 +109,7 @@ export class DishService {
         const convertOptions = instanceArrToObjArr(createDishInput.options);
 
         // omitted - 해당 property 제외
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { dishId: omitted, ...updateParam } = createDishInput;
 
         await entityManager.update(
