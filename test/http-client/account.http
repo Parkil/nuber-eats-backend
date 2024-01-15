@@ -27,7 +27,7 @@ GRAPHQL {{host}}/graphql
 
 mutation {
   login(input:{
-    email: "owner1@gmail.com"
+    email: "client1@gmail.com"
     password: "aaa000"
   }){
     ok

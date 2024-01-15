@@ -2,7 +2,7 @@ import {
   dataSourceMockFactory,
   mockImplModifyReturnValue,
   mockRepository,
-  mockTransactionalEntityManager
+  mockTransactionalEntityManager,
 } from '../common/mock/mock.datasource';
 import { Dish } from './entities/dish.entity';
 import { RestaurantRepository } from '../restaurnats/repositories/restaurant.repository';
@@ -15,7 +15,7 @@ import { errorMsg, successMsg } from '../common/msg/msg.util';
 import { MockRepository, MockType } from '../common/type/mock.type';
 
 const mockRestaurantRepository = () => ({
-  verifyOwner: jest.fn()
+  verifyOwner: jest.fn(),
 });
 
 const createParam = {
@@ -29,17 +29,17 @@ const createParam = {
       name: '맵기',
       choices: [
         { name: '보통', extra: 1 },
-        { name: '더 맵게', extra: 2 }
-      ]
+        { name: '더 맵게', extra: 2 },
+      ],
     },
     {
       name: '양',
       choices: [
         { name: '많이', extra: 1 },
-        { name: '더 많이', extra: 2 }
-      ]
-    }
-  ]
+        { name: '더 많이', extra: 2 },
+      ],
+    },
+  ],
 };
 
 const updateParam = {
@@ -49,12 +49,18 @@ const updateParam = {
   dishId: 7,
   options: [
     { name: 'opt1-1', extra: 3 },
-    { name: 'opt2-1', choices: [{ name: 'subopt1-11', extra: 1 }, { name: 'subopt2-11', extra: 2 }] }
-  ]
+    {
+      name: 'opt2-1',
+      choices: [
+        { name: 'subopt1-11', extra: 1 },
+        { name: 'subopt2-11', extra: 2 },
+      ],
+    },
+  ],
 };
 
 const deleteParam = {
-  dishId: 5
+  dishId: 5,
 };
 
 const mockOwnerUser = {
@@ -70,7 +76,7 @@ const mockOwnerUser = {
   rides: [],
   payments: [],
   createdAt: null,
-  updatedAt: null
+  updatedAt: null,
 };
 
 describe('DishService', () => {
@@ -89,17 +95,17 @@ describe('DishService', () => {
         DishService,
         {
           provide: DataSource,
-          useFactory: dataSourceMockFactory
+          useFactory: dataSourceMockFactory,
         },
         {
           provide: getRepositoryToken(Dish),
-          useValue: mockRepository()
+          useValue: mockRepository(),
         },
         {
           provide: RestaurantRepository,
-          useValue: mockRestaurantRepository()
-        }
-      ]
+          useValue: mockRestaurantRepository(),
+        },
+      ],
     }).compile();
 
     dishService = module.get<DishService>(DishService);
@@ -121,7 +127,7 @@ describe('DishService', () => {
       const result = await dishService.createDish(createParam, mockOwnerUser);
       expect(result).toEqual({
         ok: false,
-        error: 'Restaurant not found'
+        error: 'Restaurant not found',
       });
     });
 
@@ -133,7 +139,7 @@ describe('DishService', () => {
       const result = await dishService.createDish(createParam, mockOwnerUser);
       expect(result).toEqual({
         ok: false,
-        error: 'This restaurant doesnt belong to you'
+        error: 'This restaurant doesnt belong to you',
       });
     });
 
@@ -146,7 +152,7 @@ describe('DishService', () => {
       const result = await dishService.createDish(createParam, mockOwnerUser);
       expect(result).toEqual({
         ok: true,
-        error: null
+        error: null,
       });
     });
   });
@@ -160,7 +166,7 @@ describe('DishService', () => {
       const result = await dishService.editDish(updateParam, mockOwnerUser);
       expect(result).toEqual({
         ok: false,
-        error: 'Dish Not Found'
+        error: 'Dish Not Found',
       });
     });
 
@@ -173,7 +179,7 @@ describe('DishService', () => {
       const result = await dishService.editDish(updateParam, mockOwnerUser);
       expect(result).toEqual({
         ok: false,
-        error: 'Restaurant not found'
+        error: 'Restaurant not found',
       });
     });
 
@@ -186,7 +192,7 @@ describe('DishService', () => {
       const result = await dishService.editDish(updateParam, mockOwnerUser);
       expect(result).toEqual({
         ok: false,
-        error: 'This restaurant doesnt belong to you'
+        error: 'This restaurant doesnt belong to you',
       });
     });
 
@@ -200,7 +206,7 @@ describe('DishService', () => {
       const result = await dishService.editDish(updateParam, mockOwnerUser);
       expect(result).toEqual({
         ok: true,
-        error: null
+        error: null,
       });
     });
   });
@@ -214,7 +220,7 @@ describe('DishService', () => {
       const result = await dishService.deleteDish(deleteParam, mockOwnerUser);
       expect(result).toEqual({
         ok: false,
-        error: 'Dish Not Found'
+        error: 'Dish Not Found',
       });
     });
 
@@ -227,7 +233,7 @@ describe('DishService', () => {
       const result = await dishService.deleteDish(deleteParam, mockOwnerUser);
       expect(result).toEqual({
         ok: false,
-        error: 'Restaurant not found'
+        error: 'Restaurant not found',
       });
     });
 
@@ -240,7 +246,7 @@ describe('DishService', () => {
       const result = await dishService.deleteDish(deleteParam, mockOwnerUser);
       expect(result).toEqual({
         ok: false,
-        error: 'This restaurant doesnt belong to you'
+        error: 'This restaurant doesnt belong to you',
       });
     });
 
@@ -254,7 +260,7 @@ describe('DishService', () => {
       const result = await dishService.deleteDish(deleteParam, mockOwnerUser);
       expect(result).toEqual({
         ok: true,
-        error: null
+        error: null,
       });
     });
   });

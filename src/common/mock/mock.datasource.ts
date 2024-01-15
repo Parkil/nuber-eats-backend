@@ -38,7 +38,10 @@ export const mockRepository = () => ({
   dataSourceMockFactory 에서 mocking 한 transaction 의 return value 를 mocking 해야 하는 경우가 있는데
   이를 dataSourceMockFactory 호출 당시에는 mocking 할 수 있는 방법이 없어서 return 값을 호출시마다 수동으로 변경하는 api 구현
 */
-export const mockImplModifyReturnValue = (datasource : MockType<DataSource>, retValue: any) => {
+export const mockImplModifyReturnValue = (
+  datasource: MockType<DataSource>,
+  retValue: any
+) => {
   datasource.transaction.mockImplementationOnce((cb) => {
     try {
       cb(mockTransactionalEntityManager);
@@ -48,4 +51,4 @@ export const mockImplModifyReturnValue = (datasource : MockType<DataSource>, ret
 
     return retValue;
   });
-}
+};

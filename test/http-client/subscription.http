@@ -28,8 +28,8 @@ subscription {
 %}
 
 ### cooked Order Subscirption
-GRAPHQL {{host}}/graphql
-x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjkzMDE3MjUyfQ.1DBcHOkaFz680FZ6p_WHbA1SJUYUcz0-qkm-KaGYWLg
+GRAPHQL ws://localhost:4000/graphql-ws
+x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywiaWF0IjoxNzA1MDM3NzI4fQ.Hg-qkHc_fKVHZhLzYha2BhP9GGd-PpsT9IiZIQl4N4U
 
 subscription {
   cookedOrders {
