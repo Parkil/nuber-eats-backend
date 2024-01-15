@@ -1,8 +1,12 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { Order, OrderStatus } from './entites/order.entity';
-import { Repository } from 'typeorm';
-import { CreateOrderInput, CreateOrderOutput } from './dtos/create-order.dto';
+import { DataSource, In, Repository } from 'typeorm';
+import {
+  CreateOrderInput,
+  CreateOrderItemInput,
+  CreateOrderOutput,
+} from './dtos/create-order.dto';
 import { User, UserRole } from '../users/entities/user.entity';
 import { RestaurantRepository } from '../restaurnats/repositories/restaurant.repository';
 import { OrderItem } from './entites/order-item.entity';
@@ -18,15 +22,17 @@ import {
 } from '../common/common.constants';
 import { PubSub } from 'graphql-subscriptions';
 import { TakeOrderInput, TakeOrderOutput } from './dtos/take-order.dto';
+import { errorMsg, successMsg } from '../common/msg/msg.util';
 
 @Injectable()
 export class OrderService {
   constructor(
+    @InjectDataSource() private readonly dataSource: DataSource,
     @InjectRepository(Dish) private readonly dishes: Repository<Dish>,
     @InjectRepository(Order) private readonly orders: Repository<Order>,
     @InjectRepository(OrderItem)
-    private readonly orderitems: Repository<OrderItem>,
-    private readonly restaurants: RestaurantRepository,
+    private readonly orderItemRepository: Repository<OrderItem>,
+    private readonly restaurantRepository: RestaurantRepository,
     @Inject(PUB_SUB) private readonly pubSub: PubSub
   ) {}
 
@@ -35,82 +41,105 @@ export class OrderService {
     customer: User
   ): Promise<CreateOrderOutput> {
     try {
-      const restaurant = await this.restaurants.findOne({
-        where: { id: restaurantId },
-      });
+      return await this.dataSource.transaction(async (entityManager) => {
+        const restaurant = await this.restaurantRepository.findOne({
+          where: { id: restaurantId },
+        });
 
-      if (!restaurant) {
-        throw 'Restaurant not found';
-      }
-
-      // todo dish가 레스토랑과도 연결이 되는데 그러면 dishId를 받는게 아니라 restaurant relation으로 dish를 가져와서 검색을 해야 하지 않나?
-      // todo 그런데 그렇게 되면 한 레스토랑에 dish가 많아지는 경우 전체 dish를 가져와서 검색을 해야 하기 때문에 문제가 발생할 소지가 있다
-      let orderFinalPrice = 0;
-      const orderItems: OrderItem[] = [];
-      for (const item of items) {
-        const dish = await this.dishes.findOne({ where: { id: item.dishId } });
-
-        if (!dish) {
-          throw 'Dish Not Found';
+        if (!restaurant) {
+          return errorMsg('Restaurant not found');
         }
 
-        let dishFinalPrice = dish.price;
-        for (const itemOption of item.options) {
-          const dishOption = dish.options.find(
-            (dishOption) => dishOption.name === itemOption.name
-          );
+        const dishIds: number[] = items.map((item) => item.dishId);
 
-          if (dishOption) {
-            if (dishOption.extra) {
-              // option 자체에 붙는 추가 요금
-              dishFinalPrice += dishOption.extra;
-            } else {
-              // option 내부의 선택사항에 붙는 추가 요금
-              const dishOptionChoice = dishOption.choices.find(
-                (optionChoice) => optionChoice.name == itemOption.choice
-              );
+        const dishes: Dish[] = await this.dishes.find({
+          where: { id: In(dishIds) },
+        });
 
-              if (dishOptionChoice?.extra) {
-                dishFinalPrice += dishOptionChoice.extra;
-              }
-            }
-          }
+        if (dishes.length === 0 || dishes.length < items.length) {
+          return errorMsg('Dish Not Found');
         }
 
-        orderFinalPrice += dishFinalPrice;
+        const orderPrice = this._calcPrice(dishes, items);
+        const orderItems = await entityManager.save(
+          OrderItem,
+          this._makeOrderItems(dishes, items)
+        );
 
-        const orderItem = await this.orderitems.save(
-          this.orderitems.create({
-            dish,
-            options: item.options,
+        const newOrder = await entityManager.save(
+          Order,
+          this.orders.create({
+            customer,
+            restaurant,
+            total: orderPrice,
+            items: orderItems,
           })
         );
-        orderItems.push(orderItem);
+
+        await this.pubSub.publish(NEW_PENDING_ORDER, {
+          pendingOrders: { newOrder, ownerId: restaurant.ownerId },
+        });
+
+        return successMsg({ orderId: newOrder.id });
+      });
+    } catch (e) {
+      return errorMsg(e);
+    }
+  }
+
+  private _calcPrice(dishes: Dish[], items: CreateOrderItemInput[]): number {
+    let orderFinalPrice = 0;
+
+    for (const item of items) {
+      const dish = dishes.filter((row) => row.id === item.dishId)[0];
+
+      let dishFinalPrice = dish.price;
+      for (const itemOption of item.options) {
+        const dishOption = dish.options.find(
+          (dishOption) => dishOption.name === itemOption.name
+        );
+
+        if (!dishOption) {
+          continue;
+        }
+
+        if (dishOption.extra) {
+          // option 자체에 붙는 추가 요금
+          dishFinalPrice += dishOption.extra;
+        } else {
+          // option 내부의 선택사항에 붙는 추가 요금
+          const dishOptionChoice = dishOption.choices.find(
+            (optionChoice) => optionChoice.name == itemOption.choice
+          );
+
+          if (dishOptionChoice?.extra) {
+            dishFinalPrice += dishOptionChoice.extra;
+          }
+        }
       }
 
-      const newOrder = await this.orders.save(
-        this.orders.create({
-          customer,
-          restaurant,
-          total: orderFinalPrice,
-          items: orderItems,
-        })
-      );
+      orderFinalPrice += dishFinalPrice;
+    }
 
-      await this.pubSub.publish(NEW_PENDING_ORDER, {
-        pendingOrders: { newOrder, ownerId: restaurant.ownerId },
+    return orderFinalPrice;
+  }
+
+  private _makeOrderItems(
+    dishes: Dish[],
+    items: CreateOrderItemInput[]
+  ): OrderItem[] {
+    const orderItems: OrderItem[] = [];
+    for (const item of items) {
+      const dish = dishes.filter((row) => row.id === item.dishId)[0];
+      const orderItem = this.orderItemRepository.create({
+        dish,
+        options: item.options,
       });
 
-      return {
-        ok: true,
-        orderId: newOrder.id,
-      };
-    } catch (e) {
-      return {
-        ok: false,
-        error: e,
-      };
+      orderItems.push(orderItem);
     }
+
+    return orderItems;
   }
 
   async viewOrder(
@@ -124,26 +153,30 @@ export class OrderService {
       });
 
       if (!order) {
-        throw 'Order Info Not Found';
+        return errorMsg('Order Info Not Found');
       }
 
-      if (
-        (user.role === UserRole.Client && order.customerId !== user.id) ||
-        (user.role === UserRole.Delivery && order.driverId !== user.id) ||
-        (user.role === UserRole.Owner && order.restaurant.ownerId !== user.id)
-      ) {
-        throw 'Invalid Approach';
+      const checkApproachErrorMsg = this._checkApproach(user, order);
+
+      if (checkApproachErrorMsg !== '') {
+        return errorMsg(checkApproachErrorMsg);
       }
 
-      return {
-        ok: true,
-        orderInfo: order,
-      };
+      return successMsg({ orderInfo: order });
     } catch (e) {
-      return {
-        ok: false,
-        error: e,
-      };
+      return errorMsg(e);
+    }
+  }
+
+  private _checkApproach(user: User, order: Order): string {
+    if (
+      (user.role === UserRole.Client && order.customerId !== user.id) ||
+      (user.role === UserRole.Delivery && order.driverId !== user.id) ||
+      (user.role === UserRole.Owner && order.restaurant.ownerId !== user.id)
+    ) {
+      return 'Invalid Approach';
+    } else {
+      return '';
     }
   }
 
@@ -152,7 +185,7 @@ export class OrderService {
     user: User
   ): Promise<ViewOrdersOutput> {
     try {
-      let orders: Order[] = [];
+      let orders: Order[];
       if (user.role === UserRole.Client) {
         orders = await this.orders.find({
           where: {
@@ -173,7 +206,7 @@ export class OrderService {
         });
       } else {
         // Owner
-        const restaurants = await this.restaurants.find({
+        const restaurants = await this.restaurantRepository.find({
           where: {
             owner: {
               id: user.id,
@@ -188,15 +221,9 @@ export class OrderService {
         orders = restaurants.flatMap((restaurant) => restaurant.orders);
       }
 
-      return {
-        ok: true,
-        orders: orders,
-      };
+      return successMsg({ orders: orders });
     } catch (e) {
-      return {
-        ok: false,
-        error: e,
-      };
+      return errorMsg(e);
     }
   }
 
@@ -211,20 +238,18 @@ export class OrderService {
       });
 
       if (!order) {
-        throw 'Order Info Not Found';
+        return errorMsg('Order Info Not Found');
       }
 
-      if (
-        (user.role === UserRole.Client && order.customerId !== user.id) ||
-        (user.role === UserRole.Delivery && order.driverId !== user.id) ||
-        (user.role === UserRole.Owner && order.restaurant.ownerId !== user.id)
-      ) {
-        throw 'Invalid Approach';
+      const checkApproachErrorMsg = this._checkApproach(user, order);
+
+      if (checkApproachErrorMsg !== '') {
+        return errorMsg(checkApproachErrorMsg);
       }
 
       if (user.role === UserRole.Owner) {
         if (status !== OrderStatus.Cooking && status !== OrderStatus.Cooked) {
-          throw 'Cant edit status';
+          return errorMsg('Cant edit status');
         }
       }
 
@@ -233,7 +258,7 @@ export class OrderService {
           status !== OrderStatus.PickedUp &&
           status !== OrderStatus.Delivered
         ) {
-          throw 'Cant edit status';
+          return errorMsg('Cant edit status');
         }
       }
 
@@ -253,14 +278,9 @@ export class OrderService {
         orderUpdates: newOrder,
       });
 
-      return {
-        ok: true,
-      };
+      return successMsg();
     } catch (e) {
-      return {
-        ok: false,
-        error: e,
-      };
+      return errorMsg(e);
     }
   }
 
@@ -275,11 +295,11 @@ export class OrderService {
       });
 
       if (!order) {
-        throw 'Order Info Not Found';
+        return errorMsg('Order Info Not Found');
       }
 
       if (order.driver) {
-        throw 'This Order already has a driver';
+        return errorMsg('This Order already has a driver');
       }
 
       await this.orders.save([
@@ -293,14 +313,9 @@ export class OrderService {
         orderUpdates: { ...order, driver },
       });
 
-      return {
-        ok: true,
-      };
+      return successMsg();
     } catch (e) {
-      return {
-        ok: false,
-        error: e,
-      };
+      return errorMsg(e);
     }
   }
 }

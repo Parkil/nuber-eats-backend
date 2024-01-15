@@ -12,9 +12,9 @@ import { PubSub } from 'graphql-subscriptions';
 import { Inject } from '@nestjs/common';
 import {
   NEW_COOKED_ORDER,
+  NEW_ORDER_UPDATE,
   NEW_PENDING_ORDER,
   PUB_SUB,
-  NEW_ORDER_UPDATE,
 } from '../common/common.constants';
 import { OrderUpdatesInput } from './dtos/order-updates.dto';
 import { TakeOrderInput, TakeOrderOutput } from './dtos/take-order.dto';
@@ -62,6 +62,29 @@ export class OrderResolver {
     return this.orderService.editOrder(editOrderInput, user);
   }
 
+  @Role(['Delivery'])
+  @Mutation(() => TakeOrderOutput)
+  async takeOrder(
+    @Args('input') takeOrderInput: TakeOrderInput,
+    @AuthUser() driver: User
+  ): Promise<TakeOrderOutput> {
+    return this.orderService.takeOrder(takeOrderInput, driver);
+  }
+
+  @Subscription(() => Order, {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    filter: (_payload, _, _user) => {
+      return true; // 나중에 frontend 리팩토링 할때 조건확인 필요
+    },
+    resolve: ({ cookedOrders }) => {
+      return cookedOrders;
+    },
+  })
+  @Role(['Delivery'])
+  cookedOrders() {
+    return this.pubSub.asyncIterator(NEW_COOKED_ORDER);
+  }
+
   @Subscription(() => Order, {
     // filter : subscription 이 작동하는 기준
     filter: ({ pendingOrders: { ownerId } }, _, { user }) => {
@@ -78,34 +101,11 @@ export class OrderResolver {
   }
 
   @Subscription(() => Order, {
-    filter: (payload, _, user) => {
-      console.log('payload : ', payload);
-      console.log('user : ', user);
-      //return ownerId === user.id;
-      return true;
-    },
-    resolve: ({ cookedOrders }) => {
-      return cookedOrders;
-    },
-  })
-  @Role(['Delivery'])
-  cookedOrders() {
-    return this.pubSub.asyncIterator(NEW_COOKED_ORDER);
-  }
-
-  @Subscription(() => Order, {
     filter: (
       { orderUpdates: order }: { orderUpdates: Order },
       { input }: { input: OrderUpdatesInput },
       { user }: { user: User }
     ) => {
-      console.log('payload : ', order);
-      console.log('user : ', user);
-      console.log('variables : ', input);
-      // orderUpdates : publish method 에서 실어보낸 데이터
-      // user : auth guard 에서 가져온 사용자 정보
-      // input : Subscription 에서 사용한 파라메터
-
       if (
         order.driverId !== user.id &&
         order.customerId !== user.id &&
@@ -119,16 +119,7 @@ export class OrderResolver {
   })
   @Role(['Any'])
   orderUpdates(@Args('input') orderUpdatesInput: OrderUpdatesInput) {
-    // filter 에서 조건을 거는 방법도 있지만 pubSub.asyncIterator 자체를 반환하지 못하게 하는 방법도 있다
+    console.log('orderUpdatesInput : ', orderUpdatesInput);
     return this.pubSub.asyncIterator(NEW_ORDER_UPDATE);
-  }
-
-  @Role(['Delivery'])
-  @Mutation(() => TakeOrderOutput)
-  async takeOrder(
-    @Args('input') takeOrderInput: TakeOrderInput,
-    @AuthUser() driver: User
-  ): Promise<TakeOrderOutput> {
-    return this.orderService.takeOrder(takeOrderInput, driver);
   }
 }
