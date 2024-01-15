@@ -1,6 +1,6 @@
 ### Dish(레스토랑에서 파는 메뉴) 생성
 GRAPHQL {{host}}/graphql
-x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiaWF0IjoxNzAwNzg3MDY4fQ.W7irOg8DHlI9bIljA3rUogfH2LgyjwCLsZY8T2pJuOg
+x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiaWF0IjoxNzA1MDM2NDI4fQ.8VLOARgAJb4mLMp2KMBmkRjTSzgWxGlWOPRmqaiuWdk
 
 mutation {
   createDish(input:{

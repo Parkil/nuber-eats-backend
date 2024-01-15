@@ -66,13 +66,16 @@ export class DishService {
           아직까지 typeorm 에서 transaction propagation 이 어떻게 수행되는지 파악은 못한 상태이나 단일 transaction 으로 실행되는
           것이 바람직하기 때문에 repository.save 대신 entityManager.save 를 이용한다
          */
-        await entityManager.save(Dish, this.dishes.create({
-          name,
-          description,
-          price,
-          restaurant,
-          options: convertOptions,
-        }));
+        await entityManager.save(
+          Dish,
+          this.dishes.create({
+            name,
+            description,
+            price,
+            restaurant,
+            options: convertOptions,
+          })
+        );
 
         return successMsg();
       });
@@ -95,7 +98,10 @@ export class DishService {
           return errorMsg('Dish Not Found');
         }
 
-        const verifyOutput = await this.restaurantRepository.verifyOwner(dish.restaurantId, owner.id);
+        const verifyOutput = await this.restaurantRepository.verifyOwner(
+          dish.restaurantId,
+          owner.id
+        );
         if (!verifyOutput.ok) {
           return verifyOutput;
         }
@@ -103,12 +109,16 @@ export class DishService {
         const convertOptions = instanceArrToObjArr(createDishInput.options);
 
         // omitted - 해당 property 제외
-        const {dishId: omitted, ...updateParam} = createDishInput;
+        const { dishId: omitted, ...updateParam } = createDishInput;
 
-        await entityManager.update(Dish, { id: createDishInput.dishId }, {
-          ...updateParam,
-          options: convertOptions,
-        });
+        await entityManager.update(
+          Dish,
+          { id: createDishInput.dishId },
+          {
+            ...updateParam,
+            options: convertOptions,
+          }
+        );
 
         return successMsg();
       });
@@ -129,7 +139,10 @@ export class DishService {
           return errorMsg('Dish Not Found');
         }
 
-        const verifyOutput = await this.restaurantRepository.verifyOwner(dish.restaurantId, owner.id);
+        const verifyOutput = await this.restaurantRepository.verifyOwner(
+          dish.restaurantId,
+          owner.id
+        );
         if (!verifyOutput.ok) {
           return verifyOutput;
         }

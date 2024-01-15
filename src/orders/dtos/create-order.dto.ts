@@ -2,10 +2,9 @@ import { CoreOutput } from '../../common/dtos/output.dto';
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { IsNumber, ValidateNested } from 'class-validator';
 import { OrderItemOption } from '../entites/order-item.entity';
-import { number } from 'joi';
 
 @InputType()
-class CreateOrderItemInput {
+export class CreateOrderItemInput {
   @Field(() => Number)
   @IsNumber()
   dishId: number;
