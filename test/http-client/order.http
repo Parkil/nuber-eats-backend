@@ -1,19 +1,20 @@
 ### 주문
 GRAPHQL {{host}}/graphql
-x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywiaWF0IjoxNjkyMTY2MDM2fQ.1HjJzYCp8KEqusnlXbv0-3F8hL1MyZPayG5skH-omm0
+x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNzA1MDM5NzE4fQ.q7kfAdwcc3pLrE1FwHUZoMfPr2CeMBg_hRPEKn3aFSM
 
 mutation {
   createOrder(input:{
     restaurantId: 1
     items:[
       {
-        dishId: 5,
-        options: [{name: "a1"}]
+        dishId: 1,
+        options: [{name:"패티 추가"},{name:"감자튀김 추가"}]
       },
     ]
   }){
     ok
     error
+    orderId
   }
 }
 
@@ -23,7 +24,7 @@ mutation {
   });
 
   client.test("return value check", function() {
-    client.assert(response.body.data.createOrder.ok === true, "ok is not true");
+    client.assert(response.body['data']['createOrder']['ok'] === true, "ok is not true");
   });
 %}
 
