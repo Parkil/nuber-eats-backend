@@ -18,7 +18,7 @@ mutation {
   });
 
   client.test("return value check", function() {
-    client.assert(response.body.data.createAccount.ok === true, "ok is not true");
+    client.assert(response.body['data']['createAccount']['ok'] === true, "ok is not true");
   });
 %}
 
@@ -27,7 +27,7 @@ GRAPHQL {{host}}/graphql
 
 mutation {
   login(input:{
-    email: "client1@gmail.com"
+    email: "owner1@gmail.com"
     password: "aaa000"
   }){
     ok
@@ -42,7 +42,7 @@ mutation {
   });
 
   client.test("return value check", function() {
-    client.assert(response.body.data.login.ok === true, "ok is not true");
+    client.assert(response.body['data']['login']['ok'] === true, "ok is not true");
   });
 %}
 

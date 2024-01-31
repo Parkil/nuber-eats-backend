@@ -1,6 +1,6 @@
 ### 결제 정보 생성
 GRAPHQL {{host}}/graphql
-x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjkzODgzMjYzfQ.apJURGCIVnzdhFp5dRO5_IhwQ7fAOrDpreGnO1bp91w
+x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiaWF0IjoxNzA2NjgzNDcxfQ.-msHms00hr9vvtaji-6cKvUYkSmfXOB42RHZ3KMKgnU
 
 mutation {
   createPayments(input:{
@@ -24,7 +24,7 @@ mutation {
 
 ### 결제 정보 리스트
 GRAPHQL {{host}}/graphql
-x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjkzODgzMjYzfQ.apJURGCIVnzdhFp5dRO5_IhwQ7fAOrDpreGnO1bp91w
+x-jwt: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiaWF0IjoxNzA2NjgzNDcxfQ.-msHms00hr9vvtaji-6cKvUYkSmfXOB42RHZ3KMKgnU
 
 query {
   getPayments{
