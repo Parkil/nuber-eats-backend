@@ -10,3 +10,4 @@ import { RestaurantRepository } from '../restaurnats/repositories/restaurant.rep
   providers: [PaymentsResolver, PaymentsService, RestaurantRepository],
 })
 export class PaymentsModule {}
+
