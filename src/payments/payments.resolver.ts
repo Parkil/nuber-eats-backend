@@ -29,4 +29,3 @@ export class PaymentsResolver {
     return this.paymentsService.getPayments(owner);
   }
 }
-
